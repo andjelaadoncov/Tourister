@@ -1,6 +1,7 @@
 package com.example.tourister.models
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -66,27 +67,33 @@ class RegistrationViewModel : ViewModel() {
 
                 uploadProfileImage(profileImageUri, user!!.uid, onSuccess)
             } catch (e: Exception) {
-                onError(e)
+                onError(e) // Trigger error callback
             }
         }
     }
 
     private fun uploadProfileImage(profileImageUri: Uri?, userId: String, onComplete: (Uri?) -> Unit) {
         if (profileImageUri == null) {
+            Log.d("RegistrationViewModel", "Profile image URI is null")
             onComplete(null)
             return
         }
+
+        Log.d("RegistrationViewModel", "Uploading profile image: $profileImageUri")
 
         val profileImageRef = storageRef.child("profile_images/$userId.jpg")
 
         profileImageRef.putFile(profileImageUri)
             .addOnSuccessListener {
                 profileImageRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                    Log.d("RegistrationViewModel", "Profile image uploaded successfully: $downloadUri")
                     onComplete(downloadUri)
                 }
             }
             .addOnFailureListener {
+                Log.e("RegistrationViewModel", "Failed to upload profile image", it)
                 onComplete(null)
             }
     }
+
 }
