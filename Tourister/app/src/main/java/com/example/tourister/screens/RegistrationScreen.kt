@@ -25,6 +25,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tourister.R
 import com.example.tourister.models.RegistrationViewModel
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 
 @Composable
 fun RegistrationScreen(
@@ -135,14 +137,18 @@ fun RegistrationScreen(
             keyboardOptions = KeyboardOptions.Default,
             onValueChange = registrationViewModel::onPhoneNumberChange,
             leadingIcon = {
-                Icon(painter = painterResource(id = R.drawable.telephone), contentDescription = "", modifier = Modifier.size(32.dp))
+                Icon(painter = painterResource(id = R.drawable.telephone), contentDescription = "", modifier = Modifier.size(26.dp))
             }
         )
 
         Button(onClick = {
             // Otvorite galeriju za izbor slike
             pickImageLauncher.launch("image/*")
-        }) {
+        }, colors = ButtonDefaults.buttonColors(
+            containerColor = Color(0xff395068),
+            contentColor = Color.White
+        ), shape = RoundedCornerShape(6.dp),
+            modifier = Modifier.padding(top = 12.dp)){
             Text(text = "Select Profile Image")
         }
 
@@ -153,7 +159,12 @@ fun RegistrationScreen(
                     onError = onRegisterError
                 )
             },
-            modifier = Modifier.padding(top = 16.dp)
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xff395068),
+                contentColor = Color.White
+            ),
+             shape = RoundedCornerShape(6.dp) ,
+            modifier = Modifier.padding(top = 12.dp)
         ) {
             Text(text = "Register")
         }
