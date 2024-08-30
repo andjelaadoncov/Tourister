@@ -14,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,21 +21,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tourister.screens.LoginScreen
 import com.example.tourister.screens.RegistrationScreen
 import com.example.tourister.ui.theme.TouristerTheme
-import com.example.tourister.models.LoginViewModel
-import com.example.tourister.models.RegistrationViewModel
 import com.example.tourister.screens.MainAppScreen
+import com.example.tourister.models.LocationViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             TouristerTheme {
-                // A surface container using the 'background' color from the theme
                 Surface {
                     AppContent()
                 }
@@ -49,7 +46,9 @@ class MainActivity : ComponentActivity() {
 fun AppContent() {
     var isLoggedIn by remember { mutableStateOf(false) }
     var isRegistering by remember { mutableStateOf(false) }
-    var errorMessage by remember { mutableStateOf<String?>(null) } // Holds error message
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    val locationViewModel: LocationViewModel = viewModel()
 
     if (isRegistering) {
         RegistrationScreen(
@@ -77,13 +76,17 @@ fun AppContent() {
             }
         )
     } else {
-        MainAppScreen()
+        MainAppScreen(
+            locationViewModel = locationViewModel,
+            onLogout = {
+                isLoggedIn = false
+            }
+        )
     }
 
-    // Display error message as a simple Snackbar or Text
     errorMessage?.let { msg ->
         ErrorMessage(msg) {
-            errorMessage = null // Dismiss error message
+            errorMessage = null
         }
     }
 }

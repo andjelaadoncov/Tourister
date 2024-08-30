@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -31,6 +32,7 @@ class RegistrationViewModel : ViewModel() {
 
     private val auth = FirebaseAuth.getInstance()
     private val storageRef = FirebaseStorage.getInstance().reference
+    private val firestore = FirebaseFirestore.getInstance()
 
     fun onUsernameChange(newUsername: String) {
         username = newUsername
@@ -65,7 +67,9 @@ class RegistrationViewModel : ViewModel() {
 
                 user?.updateProfile(profileUpdates)?.await()
 
-                uploadProfileImage(profileImageUri, user!!.uid, onSuccess)
+                uploadProfileImage(profileImageUri, user!!.uid) { imageUrl ->
+                    saveUserDataToFirestore(user.uid, imageUrl, onSuccess, onError)
+                }
             } catch (e: Exception) {
                 onError(e) // Trigger error callback
             }
@@ -96,4 +100,29 @@ class RegistrationViewModel : ViewModel() {
             }
     }
 
+    private fun saveUserDataToFirestore(
+        userId: String,
+        profileImageUrl: Uri?,
+        onSuccess: (Uri?) -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val userData = hashMapOf(
+            "username" to username,
+            "fullName" to fullName,
+            "phoneNumber" to phoneNumber,
+            "password" to password,
+            "profileImageUrl" to profileImageUrl?.toString()
+        )
+
+        firestore.collection("users").document(userId)
+            .set(userData)
+            .addOnSuccessListener {
+                Log.d("RegistrationViewModel", "User data successfully written!")
+                onSuccess(profileImageUrl)
+            }
+            .addOnFailureListener { e ->
+                Log.e("RegistrationViewModel", "Error writing user data", e)
+                onError(e)
+            }
+    }
 }
