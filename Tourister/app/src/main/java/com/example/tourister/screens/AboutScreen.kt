@@ -22,6 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import com.example.tourister.R
 
 @Composable
@@ -35,7 +39,7 @@ fun AboutScreen() {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(4.dp),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 4.dp
             ),
@@ -55,17 +59,32 @@ fun AboutScreen() {
                 )
 
                 Text(
-                    text = """
-                        Tourister is an application that allows users to report and rate tourist attractions. 
-                        Users can register their accounts and report tourist attractions by adding basic information 
-                        and photos. The app enables users to view a map with marked attractions and filter them by 
-                        various attributes. Additionally, it supports rating attractions, adding comments, and ranking 
-                        users based on their interactions with attractions. Users also receive notifications about nearby 
-                        attractions.
-                    """.trimIndent(),
+                    text = buildAnnotatedString {
+                        append("Welcome to ")
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xff395068))) {
+                            append("Tourister")
+                        }
+                        append(", your ultimate companion for exploring and discovering the world’s most captivating tourist attractions. Our app empowers you to not only explore new destinations but also to contribute to the global travel community by sharing your experiences.\n\n")
+
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xff395068))) {
+                            append("Tourister ")
+                        }
+
+                        append("lets you explore and contribute to a global travel community by reporting and rating tourist attractions, complete with photos and descriptions. Discover marked attractions on a detailed map, filter by categories, and stay informed with notifications about nearby sites.\n\n")
+
+                        append("At ")
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xff395068))) {
+                            append("Tourister")
+                        }
+                        append(", we believe that every journey is enriched by the experiences we share. Join us and become a part of a community that thrives on discovery and adventure.")
+                    },
                     fontSize = 16.sp,
                     lineHeight = 24.sp,
-                    color = Color.Black
+                    color = Color.Black,
+                    textAlign = TextAlign.Justify,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp)
                 )
 
                 // Center the image
