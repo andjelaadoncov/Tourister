@@ -19,6 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,13 +41,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.example.tourister.R
 import com.example.tourister.models.Attraction
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.storage.FirebaseStorage
 import coil.compose.AsyncImage
+import java.io.File
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddAttractionScreen(
     latitude: Double,
@@ -53,7 +59,6 @@ fun AddAttractionScreen(
     onBackToMapScreen: (LatLng) -> Unit
 ) {
     val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
@@ -62,25 +67,53 @@ fun AddAttractionScreen(
     var workingHours by remember { mutableStateOf("") }
     var imageUrl by remember { mutableStateOf<String?>(null) }
 
+    // Predefined list of attraction types
+    val attractionTypes = listOf(
+        "Historical Sites",
+        "Natural Attractions",
+        "Cultural Attractions",
+        "Entertainment Venues",
+        "Religious Sites",
+        "Architectural Marvels",
+        "Adventure Destinations"
+    )
+
+    var expanded by remember { mutableStateOf(false) }
+
+    // Create a Uri for storing the captured image
+    val photoFile = remember { File(context.cacheDir, "captured_image.jpg") }
+    val capturedPhotoUri = remember {
+        FileProvider.getUriForFile(
+            context,
+            context.packageName + ".fileprovider",
+            photoFile
+        )
+    }
+
     val pickImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
-            Log.d("nikola", uri.toString())
+            Log.d("AddAttractionScreen", "Image selected: $uri")
             photoUri = it
+            uploadImage(it, { url ->
+                imageUrl = url
+            }, { exception ->
+                Log.e("AddAttractionScreen", "Failed to upload image", exception)
+            })
         }
     }
 
     val takePhotoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success: Boolean ->
         if (success) {
-            photoUri?.let {
-                uploadImage(it, { url ->
-                    imageUrl = url
-                }, { exception ->
-                    // Handle the error (e.g., show a message to the user)
-                })
-            }
+            Log.d("AddAttractionScreen", "Image captured: $capturedPhotoUri")
+            uploadImage(capturedPhotoUri, { url ->
+                imageUrl = url
+            }, { exception ->
+                Log.e("AddAttractionScreen", "Failed to upload image", exception)
+            })
+        } else {
+            Log.d("AddAttractionScreen", "Failed to capture image")
         }
     }
-
 
     Box(
         modifier = Modifier
@@ -90,15 +123,16 @@ fun AddAttractionScreen(
     ) {
         Card(
             modifier = Modifier.padding(16.dp),
-            elevation = CardDefaults.cardElevation(
-                defaultElevation = 8.dp
-            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             shape = RoundedCornerShape(8.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                ) {
+                verticalArrangement = Arrangement.Center
+            ) {
                 Text(
                     text = "Enhance the map by adding your own must-see tourist attractions!",
                     modifier = Modifier
@@ -109,7 +143,7 @@ fun AddAttractionScreen(
                         fontWeight = FontWeight.Bold,
                         fontStyle = FontStyle.Normal
                     ),
-                    color =Color(0xff395068),
+                    color = Color(0xff395068),
                     textAlign = TextAlign.Center
                 )
                 OutlinedTextField(
@@ -124,11 +158,37 @@ fun AddAttractionScreen(
                     label = { Text("Add Description") }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = attractionType,
-                    onValueChange = { attractionType = it },
-                    label = { Text("Attraction Type") }
-                )
+
+                // Attraction Type Dropdown Menu
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = attractionType,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Attraction Type") },
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                        },
+                        modifier = Modifier.menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        attractionTypes.forEach { type ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    attractionType = type
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(8.dp))
                 OutlinedTextField(
                     value = ticketPrice,
@@ -144,13 +204,13 @@ fun AddAttractionScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Absolute.SpaceEvenly
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Button(onClick = { pickImageLauncher.launch("image/*") }) {
                         Text("Pick Image")
                     }
-                    Spacer(modifier = Modifier.width(4.dp)) // Adjust the width to your preferred space
-                    Button(onClick = { photoUri?.let { takePhotoLauncher.launch(it) } }) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Button(onClick = { takePhotoLauncher.launch(capturedPhotoUri) }) {
                         Text("Take Photo")
                     }
                 }
@@ -180,12 +240,10 @@ fun AddAttractionScreen(
     }
 }
 
-
 @Composable
 fun DisplayImage(imageUrl: String?) {
     if (imageUrl.isNullOrBlank()) {
-        // Optionally show a placeholder or fallback UI
-        Text("$imageUrl")
+        Text("No image selected")
     } else {
         AsyncImage(
             model = imageUrl,
@@ -202,8 +260,6 @@ fun uploadImage(uri: Uri?, onSuccess: (String?) -> Unit, onFailure: (Exception) 
         return
     }
 
-    Log.d("UploadImage", "Uploading image: $uri")
-
     val storageRef = FirebaseStorage.getInstance().reference.child("imagesAttractions/${uri.lastPathSegment}")
 
     storageRef.putFile(uri)
@@ -211,13 +267,11 @@ fun uploadImage(uri: Uri?, onSuccess: (String?) -> Unit, onFailure: (Exception) 
             storageRef.downloadUrl.addOnSuccessListener { downloadUrl ->
                 Log.d("UploadImage", "Image uploaded successfully: $downloadUrl")
                 onSuccess(downloadUrl.toString())
+            }.addOnFailureListener { exception ->
+                Log.e("UploadImage", "Failed to get download URL", exception)
+                onFailure(exception)
             }
-                .addOnFailureListener { exception ->
-                    Log.e("UploadImage", "Failed to get download URL", exception)
-                    onFailure(exception)
-                }
-        }
-        .addOnFailureListener { exception ->
+        }.addOnFailureListener { exception ->
             Log.e("UploadImage", "Failed to upload image", exception)
             onFailure(exception)
         }

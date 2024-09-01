@@ -1,7 +1,6 @@
 package com.example.tourister.screens
 
 import LocationService
-import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
@@ -79,7 +78,7 @@ fun MapScreen(
                         val markerOptions = MarkerOptions()
                             .position(latLng)
                             .title("Attraction")
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
 
                         googleMap.addMarker(markerOptions)
                     }
