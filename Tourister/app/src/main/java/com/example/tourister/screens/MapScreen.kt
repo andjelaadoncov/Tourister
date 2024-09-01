@@ -16,12 +16,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.example.tourister.R
+import com.example.tourister.viewModels.AttractionViewModel
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -31,13 +33,14 @@ fun MapScreen(
     location: Location?,
     onBackToMainScreen: () -> Unit,
     onAddAttraction: (LatLng) -> Unit,
-    attractionLocations: List<LatLng> = emptyList()
+    attractionViewModel: AttractionViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle()
     val googleMapState = remember { mutableStateOf<GoogleMap?>(null) }
     var showDialog by remember { mutableStateOf(false) }
     var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
+    val attractions by attractionViewModel.attractions.collectAsState()
 
     Scaffold(
         topBar = {
@@ -74,10 +77,11 @@ fun MapScreen(
                     }
 
                     // Add markers for existing attractions
-                    attractionLocations.forEach { latLng ->
+                    attractions.forEach { attraction ->
+                        val latLng = LatLng(attraction.latitude, attraction.longitude)
                         val markerOptions = MarkerOptions()
                             .position(latLng)
-                            .title("Attraction")
+                            .title(attraction.name)
                             .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
 
                         googleMap.addMarker(markerOptions)

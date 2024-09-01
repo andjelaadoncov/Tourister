@@ -22,14 +22,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.tourister.R
+import com.example.tourister.viewModels.AttractionViewModel
 import com.example.tourister.viewModels.LocationViewModel
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,8 +37,12 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainAppScreen(
     locationViewModel: LocationViewModel = viewModel(),
+    attractionViewModel: AttractionViewModel = viewModel(), // Add AttractionViewModel
     onLogout: () -> Unit
 ) {
+    val auth = FirebaseAuth.getInstance()
+    val currentUserId = auth.currentUser?.uid ?: ""
+
     val navController = rememberNavController()
     val scope = rememberCoroutineScope()
     var showLogoutDialog by remember { mutableStateOf(false) }
@@ -85,7 +89,7 @@ fun MainAppScreen(
                     onAddAttraction = { latLng ->
                         navController.navigate("addAttraction/${latLng.latitude}/${latLng.longitude}")
                     },
-                    attractionLocations = attractionLocations
+                    attractionViewModel = attractionViewModel // Pass AttractionViewModel
                 )
             }
             composable("profile") {
@@ -97,6 +101,7 @@ fun MainAppScreen(
                 AddAttractionScreen(
                     latitude = latitude,
                     longitude = longitude,
+                    currentUserId = currentUserId,
                     onAddAttraction = { attraction ->
                         // Save to Firebase or local database
                         scope.launch {
@@ -110,7 +115,8 @@ fun MainAppScreen(
                             attractionLocations.add(latLng)
                             navController.navigate("map")
                         }
-                    }
+                    },
+                    attractionViewModel = attractionViewModel
                 )
             }
         }

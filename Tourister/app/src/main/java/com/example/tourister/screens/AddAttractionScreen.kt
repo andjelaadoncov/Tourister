@@ -33,8 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -42,12 +40,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.example.tourister.R
 import com.example.tourister.models.Attraction
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.storage.FirebaseStorage
-import coil.compose.AsyncImage
+import com.example.tourister.viewModels.AttractionViewModel
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -55,8 +53,10 @@ import java.io.File
 fun AddAttractionScreen(
     latitude: Double,
     longitude: Double,
+    currentUserId: String,
+    onBackToMapScreen: (LatLng) -> Unit,
     onAddAttraction: (Attraction) -> Unit,
-    onBackToMapScreen: (LatLng) -> Unit
+    attractionViewModel: AttractionViewModel
 ) {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
@@ -228,10 +228,20 @@ fun AddAttractionScreen(
                         longitude = longitude,
                         attractionType = attractionType,
                         ticketPrice = ticketPrice,
-                        workingHours = workingHours
+                        workingHours = workingHours,
+                        addedByUserId = currentUserId
                     )
-                    onAddAttraction(attraction)
-                    onBackToMapScreen(LatLng(latitude, longitude))
+                    attractionViewModel.addAttraction(
+                        attraction,
+                        {
+                            // On success
+                            onBackToMapScreen(LatLng(latitude, longitude))
+                        },
+                        { exception ->
+                            // On failure
+                            Log.e("AddAttractionScreen", "Failed to add attraction", exception)
+                        }
+                    )
                 }) {
                     Text("Add Attraction")
                 }

@@ -9,5 +9,6 @@ data class Attraction(
     val attractionType: String = "",
     val ticketPrice: String = "",
     val workingHours: String = "",
+    val addedByUserId: String = "",  // New field for the user who added the attraction
     val createdAt: Long = System.currentTimeMillis()
 )
