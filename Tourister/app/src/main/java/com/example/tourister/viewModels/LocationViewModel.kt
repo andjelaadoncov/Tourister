@@ -1,4 +1,4 @@
-package com.example.tourister.models
+package com.example.tourister.viewModels
 
 import android.Manifest
 import android.app.Application
@@ -28,6 +28,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     private var hasLocation = false
 
     fun startLocationUpdates() {
+        Log.d("nikola", "startLocationUpdates")
         val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000)
             .setWaitForAccurateLocation(true)
             .setMinUpdateIntervalMillis(2000)
@@ -38,6 +39,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
 
             // Attempt to get the most accurate current location
             fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null).addOnSuccessListener { location ->
+                Log.d("nikola", "location1")
                 if (!hasLocation) {
                     location?.let {
                         _location.value = it

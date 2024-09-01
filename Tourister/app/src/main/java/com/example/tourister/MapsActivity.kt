@@ -15,7 +15,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.example.tourister.databinding.ActivityMapsBinding
-import com.example.tourister.models.LocationViewModel
+import com.example.tourister.viewModels.LocationViewModel
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 

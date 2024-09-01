@@ -15,7 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import com.example.tourister.R
-import com.example.tourister.models.LoginViewModel
+import com.example.tourister.viewModels.LoginViewModel
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.lifecycle.viewmodel.compose.viewModel

@@ -1,4 +1,4 @@
-package com.example.tourister.models
+package com.example.tourister.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

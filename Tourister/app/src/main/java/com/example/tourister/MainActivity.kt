@@ -27,7 +27,7 @@ import com.example.tourister.screens.LoginScreen
 import com.example.tourister.screens.RegistrationScreen
 import com.example.tourister.ui.theme.TouristerTheme
 import com.example.tourister.screens.MainAppScreen
-import com.example.tourister.models.LocationViewModel
+import com.example.tourister.viewModels.LocationViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

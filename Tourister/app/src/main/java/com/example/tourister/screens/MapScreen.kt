@@ -1,6 +1,12 @@
 package com.example.tourister.screens
 
+import LocationService
+import android.content.Context
+import android.content.Intent
 import android.location.Location
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,24 +23,40 @@ import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.example.tourister.R
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(location: Location?, onBackToMainScreen: () -> Unit) {
+fun MapScreen(
+    location: Location?,
+    onBackToMainScreen: () -> Unit,
+    onAddAttraction: (LatLng) -> Unit,
+    attractionLocations: List<LatLng> = emptyList()
+) {
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle()
     val googleMapState = remember { mutableStateOf<GoogleMap?>(null) }
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Maps") },
-                navigationIcon = {
-                    IconButton(onClick = onBackToMainScreen) {
-                        Icon(painter = painterResource(id = R.drawable.backarrow), contentDescription = "Back to Main Screen", modifier = Modifier.size(32.dp))
+            Column {
+                TopAppBar(
+                    title = { Text("Maps") },
+                    navigationIcon = {
+                        IconButton(onClick = onBackToMainScreen) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.backarrow),
+                                contentDescription = "Back to Main Screen",
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
                     }
-                }
-            )
+                )
+                ServiceControl()
+            }
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
@@ -50,6 +72,21 @@ fun MapScreen(location: Location?, onBackToMainScreen: () -> Unit) {
                         googleMap.clear() // Clear previous markers
                         googleMap.addMarker(markerOptions)
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                    }
+
+                    // Add markers for existing attractions
+                    attractionLocations.forEach { latLng ->
+                        val markerOptions = MarkerOptions()
+                            .position(latLng)
+                            .title("Attraction")
+                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+
+                        googleMap.addMarker(markerOptions)
+                    }
+
+                    googleMap.setOnMapClickListener { latLng ->
+                        selectedLatLng = latLng
+                        showDialog = true
                     }
                 }
             }
@@ -77,14 +114,44 @@ fun MapScreen(location: Location?, onBackToMainScreen: () -> Unit) {
                         googleMapState.value?.animateCamera(CameraUpdateFactory.zoomOut())
                     }, colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xff395068),
-                        contentColor = Color.White,
+                        contentColor = Color.White
                     )) {
                         Text("-", fontWeight = FontWeight.Bold)
                     }
                 }
             }
         }
+
+        if (showDialog && selectedLatLng != null) {
+            AddAttractionDialog(
+                onDismiss = { showDialog = false },
+                onConfirm = {
+                    onAddAttraction(selectedLatLng!!)
+                    showDialog = false
+                }
+            )
+        }
     }
+}
+
+
+@Composable
+fun AddAttractionDialog(onDismiss: () -> Unit, onConfirm: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Attraction") },
+        text = { Text("Do you want to add an attraction here?") },
+        confirmButton = {
+            Button(onClick = onConfirm) {
+                Text("Yes")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("No")
+            }
+        }
+    )
 }
 
 @Composable
@@ -103,3 +170,39 @@ fun rememberMapViewWithLifecycle(): MapView {
 
     return mapView
 }
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun ServiceControl() {
+    val context = LocalContext.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color(0xff395068)),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Button(onClick = {
+            val serviceIntent = Intent(context, LocationService::class.java)
+            context.startForegroundService(serviceIntent)
+        }) {
+            Text("Start Service")
+        }
+
+        Button(onClick = {
+            val serviceIntent = Intent(context, LocationService::class.java)
+            context.stopService(serviceIntent)
+        }) {
+            Text("Stop Service")
+        }
+    }
+}
+
+fun GoogleMap.addAttractionMarker(latLng: LatLng) {
+    val markerOptions = MarkerOptions()
+        .position(latLng)
+        .title("New Attraction")
+        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+    this.addMarker(markerOptions)
+}
+
