@@ -128,7 +128,13 @@ fun MainAppScreen(
                 AttractionDetailScreen(
                     attractionId = attractionId,
                     currentUserId = currentUserId,
-                    attractionViewModel = attractionViewModel
+                    attractionViewModel = attractionViewModel,
+                    onBackToMapScreen = { latLng ->
+                        scope.launch {
+                            attractionLocations.add(latLng)
+                            navController.navigate("map")
+                        }
+                    },
                 )
             }
         }

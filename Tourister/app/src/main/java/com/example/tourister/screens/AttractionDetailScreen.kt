@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
@@ -49,12 +51,14 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
+import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun AttractionDetailScreen(
     attractionId: String,  // ID of the attraction
     currentUserId: String,  // ID of the current user
-    attractionViewModel: AttractionViewModel = viewModel()  // ViewModel instance
+    attractionViewModel: AttractionViewModel = viewModel(), // ViewModel instance
+    onBackToMapScreen: (LatLng) -> Unit,
 ) {
     // State variables to hold attraction details and user inputs
     var attraction by remember { mutableStateOf<Attraction?>(null) }
@@ -90,6 +94,7 @@ fun AttractionDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -128,7 +133,7 @@ fun AttractionDetailScreen(
                     },
                     style = TextStyle(
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
                     ),
                     color = Color.Black,
                     textAlign = TextAlign.Justify,
@@ -145,7 +150,7 @@ fun AttractionDetailScreen(
                     },
                     style = TextStyle(
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Normal
+                        fontWeight = FontWeight.Normal,
                     ),
                     color = Color.Black,
                     textAlign = TextAlign.Justify,
@@ -201,14 +206,13 @@ fun AttractionDetailScreen(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(text = "Rating")
             StarRatingBar(
                 rating = rating,
                 onRatingChanged = { newRating ->
                     rating = newRating.toFloat()
                 },
                 starCount = 5,
-                starSize = 32,
+                starSize = 36,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -221,33 +225,52 @@ fun AttractionDetailScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    val review = Review(
-                        userId = currentUserId,
-                        rating = rating,
-                        comment = reviewText
-                    )
-                    attractionViewModel.addReview(attractionId, review)
-                },
-                modifier = Modifier.align(Alignment.CenterHorizontally),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xff395068),
-                    contentColor = Color.White
-                ),
-            ) {
-                Text(text = "Submit Review")
+            Row( horizontalArrangement = Arrangement.SpaceEvenly) {
+                Button(
+                    onClick = {
+                        val review = Review(
+                            userId = currentUserId,
+                            rating = rating,
+                            comment = reviewText
+                        )
+                        attractionViewModel.addReview(attractionId, review)
+                        onBackToMapScreen(LatLng(attraction!!.latitude, attraction!!.longitude))
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xff395068),
+                        contentColor = Color.White
+                    ),
+                ) {
+                    Text(text = "Submit Review")
+                }
+
+                Button(
+                    onClick = {
+                        onBackToMapScreen(
+                            LatLng(
+                                attraction!!.latitude,
+                                attraction!!.longitude
+                            )
+                        )
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,  // Choose a different color if you like
+                        contentColor = Color(0xff395068)
+                    ),
+                ) {
+                    Text(text = "Back to Map")
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            userReview?.let {
-                Text(text = "Your Previous Review", style = MaterialTheme.typography.headlineSmall)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Rating: ${it.rating}", style = MaterialTheme.typography.bodyMedium)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = "Comment: ${it.comment}", style = MaterialTheme.typography.bodyMedium)
-            }
+//            userReview?.let {
+//                Text(text = "Your Previous Review", style = MaterialTheme.typography.headlineSmall)
+//                Spacer(modifier = Modifier.height(8.dp))
+//                Text(text = "Rating: ${it.rating}", style = MaterialTheme.typography.bodyMedium)
+//                Spacer(modifier = Modifier.height(4.dp))
+//                Text(text = "Comment: ${it.comment}", style = MaterialTheme.typography.bodyMedium)
+//            }
         }
     }
 }
@@ -258,7 +281,7 @@ fun StarRatingBar(
     onRatingChanged: (Int) -> Unit,
     modifier: Modifier = Modifier,
     starCount: Int = 5,
-    starSize: Int = 32,
+    starSize: Int = 36,
     starColor: Color = MaterialTheme.colorScheme.primary
 ) {
     Row(

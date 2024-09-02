@@ -88,6 +88,15 @@ fun MapScreen(
                         googleMap.addMarker(markerOptions)
                     }
 
+//                    googleMap.setOnMarkerClickListener { marker ->
+//                        val selectedAttraction = attractions.find {
+//                            it.latitude == marker.position.latitude && it.longitude == marker.position.longitude
+//                        }
+//                        selectedAttraction?.let {
+//                            onAttractionClick(it.id!!)
+//                        }
+//                        true
+//                    }
                     googleMap.setOnMarkerClickListener { marker ->
                         val selectedAttraction = attractions.find {
                             it.latitude == marker.position.latitude && it.longitude == marker.position.longitude
@@ -98,7 +107,17 @@ fun MapScreen(
                         true
                     }
 
-
+                    googleMap.setOnMapClickListener { latLng ->
+                        val existingAttraction = attractions.find {
+                            it.latitude == latLng.latitude && it.longitude == latLng.longitude
+                        }
+                        if (existingAttraction != null) {
+                            onAttractionClick(existingAttraction.id!!)
+                        } else {
+                            selectedLatLng = latLng
+                            showDialog = true
+                        }
+                    }
                 }
             }
 
