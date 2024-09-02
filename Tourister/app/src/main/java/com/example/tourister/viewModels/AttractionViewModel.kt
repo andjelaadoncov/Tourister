@@ -90,55 +90,58 @@ class AttractionViewModel : ViewModel() {
                 onSuccess(null)
             }
     }
-     //Function to add a review
-     fun addReview(attractionId: String, review: Review) {
-         val db = FirebaseFirestore.getInstance()
-         val attractionRef = db.collection("attractions").document(attractionId)
 
-         db.runTransaction { transaction ->
-             val snapshot = transaction.get(attractionRef)
-             val attraction = snapshot.toObject(Attraction::class.java)
-
-             if (attraction != null) {
-                 // Ažuriraj prosečnu ocenu i broj recenzija
-                 val newNumberOfReviews = attraction.numberOfReviews + 1
-                 val totalRating = attraction.averageRating * attraction.numberOfReviews + review.rating
-                 val newAverageRating = totalRating / newNumberOfReviews
-
-                 // Ažuriraj atrakciju sa novim vrednostima
-                 transaction.update(attractionRef, "averageRating", newAverageRating)
-                 transaction.update(attractionRef, "numberOfReviews", newNumberOfReviews)
-
-                 // Dodaj ili ažuriraj recenziju u podkolekciji
-                 val reviewRef = attractionRef.collection("reviews").document(review.userId)
-                 transaction.set(reviewRef, review)
-             }
-         }.addOnSuccessListener {
-             Log.d("AddReview", "Review added successfully")
-         }.addOnFailureListener { exception ->
-             Log.e("AddReview", "Failed to add review", exception)
-         }
-     }
-
-
-
-
-    // Function to load the user's review
-    fun loadUserReview(attractionId: String, userId: String, onReviewLoaded: (Review?) -> Unit) {
+    fun addReview(attractionId: String, review: Review) {
         val db = FirebaseFirestore.getInstance()
-        val reviewRef = db.collection("attractions").document(attractionId)
-            .collection("reviews").document(userId)
+        val attractionRef = db.collection("attractions").document(attractionId)
+        val reviewRef = attractionRef.collection("reviews").document(review.userId)
 
-        reviewRef.get()
-            .addOnSuccessListener { documentSnapshot ->
-                val review = documentSnapshot.toObject(Review::class.java)
-                onReviewLoaded(review)
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(attractionRef)
+            val attraction = snapshot.toObject(Attraction::class.java)
+
+            if (attraction != null) {
+                // Check if the review already exists
+                if (transaction.get(reviewRef).exists()) {
+                    throw IllegalStateException("You have already submitted a review for this attraction.")
+                } else {
+                    // Add new review
+                    transaction.set(reviewRef, review)
+                    // Update attraction's average rating and number of reviews
+                    val newNumberOfReviews = attraction.numberOfReviews + 1
+                    val newAverageRating = (attraction.averageRating * (attraction.numberOfReviews) + review.rating) / newNumberOfReviews
+                    transaction.update(attractionRef, mapOf(
+                        "averageRating" to newAverageRating,
+                        "numberOfReviews" to newNumberOfReviews
+                    ))
+                }
             }
-            .addOnFailureListener { exception ->
-                Log.e("LoadReview", "Failed to load review", exception)
-                onReviewLoaded(null)
-            }
+        }.addOnSuccessListener {
+            // Handle success
+        }.addOnFailureListener { e ->
+            // Handle error
+            Log.e("AttractionViewModel", "Transaction failure.", e)
+        }
     }
+
+
+    fun loadUserReview(attractionId: String, userId: String, callback: (Review?) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        val reviewRef = db.collection("attractions").document(attractionId).collection("reviews").document(userId)
+
+        reviewRef.get().addOnSuccessListener { documentSnapshot ->
+            if (documentSnapshot.exists()) {
+                val review = documentSnapshot.toObject(Review::class.java)
+                callback(review)
+            } else {
+                callback(null)
+            }
+        }.addOnFailureListener { e ->
+            Log.e("AttractionViewModel", "Failed to load user review.", e)
+            callback(null)
+        }
+    }
+
 }
 
 

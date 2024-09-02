@@ -191,6 +191,8 @@ fun AttractionDetailScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = buildAnnotatedString {
                         withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -210,55 +212,53 @@ fun AttractionDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "Leave a Review for ${attraction?.name ?: ""}",
-                style = TextStyle(
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.Normal,
-                    fontStyle = FontStyle.Normal
-                ),
-                color = Color(0xff395068),
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            StarRatingBar(
-                rating = rating,
-                onRatingChanged = { newRating ->
-                    rating = newRating.toFloat()
-                },
-                starCount = 5,
-                starSize = 36,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = reviewText,
-                onValueChange = { reviewText = it },
-                label = { Text("Your Comment") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row( horizontalArrangement = Arrangement.SpaceEvenly) {
-                Button(
-                    onClick = {
-                        val review = Review(
-                            userId = currentUserId,
-                            rating = rating,
-                            comment = reviewText
-                        )
-                        attractionViewModel.addReview(attractionId, review)
-                        onBackToMapScreen(LatLng(attraction!!.latitude, attraction!!.longitude))
+            // Show existing review if it exists
+            userReview?.let {
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Your Rating: ")
+                        }
+                        append("${it.rating} stars")
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xff395068),
-                        contentColor = Color.White
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal
                     ),
-                ) {
-                    Text(text = "Submit Review")
-                }
+                    color = Color.Black,
+                    textAlign = TextAlign.Justify,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Your Comment: ")
+                        }
+                        append(it.comment)
+                    },
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    color = Color.Black,
+                    textAlign = TextAlign.Justify,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "You have already submitted a review.",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Red
+                    ),
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Button(
                     onClick = {
@@ -276,10 +276,81 @@ fun AttractionDetailScreen(
                 ) {
                     Text(text = "Back to Map")
                 }
+
+            } ?: run {
+                // If no existing review, show the review form
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Leave a Review for ${attraction?.name ?: ""}",
+                    style = TextStyle(
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Normal,
+                        fontStyle = FontStyle.Normal
+                    ),
+                    color = Color(0xff395068),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                StarRatingBar(
+                    rating = rating,
+                    onRatingChanged = { newRating ->
+                        rating = newRating.toFloat()
+                    },
+                    starCount = 5,
+                    starSize = 36,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = reviewText,
+                    onValueChange = { reviewText = it },
+                    label = { Text("Your Comment") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(horizontalArrangement = Arrangement.SpaceEvenly) {
+                    Button(
+                        onClick = {
+                            val review = Review(
+                                userId = currentUserId,
+                                rating = rating,
+                                comment = reviewText
+                            )
+                            attractionViewModel.addReview(attractionId, review)
+                            onBackToMapScreen(LatLng(attraction!!.latitude, attraction!!.longitude))
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xff395068),
+                            contentColor = Color.White
+                        ),
+                    ) {
+                        Text(text = "Submit Review")
+                    }
+
+                    Button(
+                        onClick = {
+                            onBackToMapScreen(
+                                LatLng(
+                                    attraction!!.latitude,
+                                    attraction!!.longitude
+                                )
+                            )
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.White,  // Choose a different color if you like
+                            contentColor = Color(0xff395068)
+                        ),
+                    ) {
+                        Text(text = "Back to Map")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
         }
     }
 }
