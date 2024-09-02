@@ -142,6 +142,9 @@ class AttractionViewModel : ViewModel() {
         }
     }
 
+    fun getAttractionById(attractionId: String): Attraction? {
+        return attractions.value.find { it.id == attractionId }
+    }
 }
 
 

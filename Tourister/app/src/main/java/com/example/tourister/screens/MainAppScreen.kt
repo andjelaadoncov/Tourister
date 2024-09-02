@@ -99,6 +99,12 @@ fun MainAppScreen(
             composable("profile") {
                 Text(text = "Home Screen", fontSize = 24.sp)
             }
+            composable("attractionsList") {
+                AttractionsListScreen(
+                    attractionViewModel = attractionViewModel,
+                    navController = navController
+                )
+            }
             composable("addAttraction/{latitude}/{longitude}") { backStackEntry ->
                 val latitude = backStackEntry.arguments?.getString("latitude")?.toDouble() ?: 0.0
                 val longitude = backStackEntry.arguments?.getString("longitude")?.toDouble() ?: 0.0
@@ -137,6 +143,16 @@ fun MainAppScreen(
                     },
                 )
             }
+
+            composable("attractionSummary/{attractionId}") { backStackEntry ->
+                val attractionId = backStackEntry.arguments?.getString("attractionId") ?: ""
+                AttractionSummaryScreen(
+                    attractionId = attractionId,
+                    attractionViewModel = attractionViewModel,
+                    onBack = { navController.navigateUp() }
+                )
+            }
+
         }
 
         LaunchedEffect(Unit) {
@@ -188,10 +204,10 @@ fun NavigationBar(navController: NavHostController) {
                             contentDescription = "Home",
                             tint = Color.White,
                             modifier = Modifier
-                                .size(32.dp)
-                                .padding(end = 4.dp)
+                                .size(30.dp)
+                                .padding(end = 3.dp),
                         )
-                        Text("Home", color = Color.White)
+                        Text("Home", color = Color.White, fontSize = 15.sp)
                     }
                 }
             )
@@ -205,10 +221,10 @@ fun NavigationBar(navController: NavHostController) {
                             contentDescription = "Maps",
                             tint = Color.White,
                             modifier = Modifier
-                                .size(32.dp)
-                                .padding(end = 4.dp)
+                                .size(30.dp)
+                                .padding(end = 3.dp)
                         )
-                        Text("Maps", color = Color.White)
+                        Text("Maps", color = Color.White, fontSize = 15.sp)
                     }
                 }
             )
@@ -222,10 +238,28 @@ fun NavigationBar(navController: NavHostController) {
                             contentDescription = "Profile",
                             tint = Color.White,
                             modifier = Modifier
-                                .size(32.dp)
-                                .padding(end = 4.dp)
+                                .size(30.dp)
+                                .padding(end = 3.dp)
                         )
-                        Text("Profile", color = Color.White)
+                        Text("Profile", color = Color.White, fontSize = 15.sp)
+                    }
+                }
+            )
+
+            NavigationBarItem(
+                selected = false,
+                onClick = { navController.navigate("attractionsList") },
+                icon = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.attractions),
+                            contentDescription = "Attractions",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(30.dp)
+                                .padding(end = 3.dp)
+                        )
+                        Text("Attractions", color = Color.White, fontSize = 15.sp)
                     }
                 }
             )

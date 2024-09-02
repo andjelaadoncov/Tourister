@@ -274,8 +274,9 @@ fun AttractionDetailScreen(
                         contentColor = Color(0xff395068)
                     ),
                 ) {
-                    Text(text = "Back to Map")
+                    Text(text = "Go to Map")
                 }
+
 
             } ?: run {
                 // If no existing review, show the review form
