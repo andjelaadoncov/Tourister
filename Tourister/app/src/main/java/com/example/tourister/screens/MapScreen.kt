@@ -88,15 +88,6 @@ fun MapScreen(
                         googleMap.addMarker(markerOptions)
                     }
 
-//                    googleMap.setOnMarkerClickListener { marker ->
-//                        val selectedAttraction = attractions.find {
-//                            it.latitude == marker.position.latitude && it.longitude == marker.position.longitude
-//                        }
-//                        selectedAttraction?.let {
-//                            onAttractionClick(it.id!!)
-//                        }
-//                        true
-//                    }
                     googleMap.setOnMarkerClickListener { marker ->
                         val selectedAttraction = attractions.find {
                             it.latitude == marker.position.latitude && it.longitude == marker.position.longitude

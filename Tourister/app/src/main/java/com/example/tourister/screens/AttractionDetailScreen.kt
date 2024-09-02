@@ -190,6 +190,22 @@ fun AttractionDetailScreen(
                     textAlign = TextAlign.Justify,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Average Rating: ")
+                        }
+                        append("${attraction?.averageRating ?: "No ratings yet"} (${attraction?.numberOfReviews} reviews)")
+                    },
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    color = Color.Black,
+                    textAlign = TextAlign.Justify,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -264,13 +280,6 @@ fun AttractionDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-//            userReview?.let {
-//                Text(text = "Your Previous Review", style = MaterialTheme.typography.headlineSmall)
-//                Spacer(modifier = Modifier.height(8.dp))
-//                Text(text = "Rating: ${it.rating}", style = MaterialTheme.typography.bodyMedium)
-//                Spacer(modifier = Modifier.height(4.dp))
-//                Text(text = "Comment: ${it.comment}", style = MaterialTheme.typography.bodyMedium)
-//            }
         }
     }
 }

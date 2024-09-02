@@ -90,21 +90,38 @@ class AttractionViewModel : ViewModel() {
                 onSuccess(null)
             }
     }
+     //Function to add a review
+     fun addReview(attractionId: String, review: Review) {
+         val db = FirebaseFirestore.getInstance()
+         val attractionRef = db.collection("attractions").document(attractionId)
 
-    // Function to add a review
-    fun addReview(attractionId: String, review: Review) {
-        val db = FirebaseFirestore.getInstance()
-        val reviewRef = db.collection("attractions").document(attractionId)
-            .collection("reviews").document(review.userId)
+         db.runTransaction { transaction ->
+             val snapshot = transaction.get(attractionRef)
+             val attraction = snapshot.toObject(Attraction::class.java)
 
-        reviewRef.set(review)
-            .addOnSuccessListener {
-                Log.d("AddReview", "Review added successfully")
-            }
-            .addOnFailureListener { exception ->
-                Log.e("AddReview", "Failed to add review", exception)
-            }
-    }
+             if (attraction != null) {
+                 // Ažuriraj prosečnu ocenu i broj recenzija
+                 val newNumberOfReviews = attraction.numberOfReviews + 1
+                 val totalRating = attraction.averageRating * attraction.numberOfReviews + review.rating
+                 val newAverageRating = totalRating / newNumberOfReviews
+
+                 // Ažuriraj atrakciju sa novim vrednostima
+                 transaction.update(attractionRef, "averageRating", newAverageRating)
+                 transaction.update(attractionRef, "numberOfReviews", newNumberOfReviews)
+
+                 // Dodaj ili ažuriraj recenziju u podkolekciji
+                 val reviewRef = attractionRef.collection("reviews").document(review.userId)
+                 transaction.set(reviewRef, review)
+             }
+         }.addOnSuccessListener {
+             Log.d("AddReview", "Review added successfully")
+         }.addOnFailureListener { exception ->
+             Log.e("AddReview", "Failed to add review", exception)
+         }
+     }
+
+
+
 
     // Function to load the user's review
     fun loadUserReview(attractionId: String, userId: String, onReviewLoaded: (Review?) -> Unit) {
