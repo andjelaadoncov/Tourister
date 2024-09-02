@@ -235,6 +235,7 @@ fun AddAttractionScreen(
                         attraction,
                         {
                             // On success
+                            attractionViewModel.loadAttractions()
                             onBackToMapScreen(LatLng(latitude, longitude))
                         },
                         { exception ->

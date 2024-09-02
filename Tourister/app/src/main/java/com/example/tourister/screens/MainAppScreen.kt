@@ -89,7 +89,11 @@ fun MainAppScreen(
                     onAddAttraction = { latLng ->
                         navController.navigate("addAttraction/${latLng.latitude}/${latLng.longitude}")
                     },
-                    attractionViewModel = attractionViewModel // Pass AttractionViewModel
+                    attractionViewModel = attractionViewModel, // Pass AttractionViewModel
+                    onAttractionClick = { attraction ->
+                        // Navigate to the AttractionDetailScreen when a marker is clicked
+                        navController.navigate("attractionDetail/${attraction}")
+                    }
                 )
             }
             composable("profile") {
@@ -116,6 +120,14 @@ fun MainAppScreen(
                             navController.navigate("map")
                         }
                     },
+                    attractionViewModel = attractionViewModel
+                )
+            }
+            composable("attractionDetail/{attractionId}") { backStackEntry ->
+                val attractionId = backStackEntry.arguments?.getString("attractionId") ?: ""
+                AttractionDetailScreen(
+                    attractionId = attractionId,
+                    currentUserId = currentUserId,
                     attractionViewModel = attractionViewModel
                 )
             }

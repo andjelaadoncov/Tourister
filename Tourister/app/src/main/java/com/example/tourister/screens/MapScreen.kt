@@ -33,7 +33,8 @@ fun MapScreen(
     location: Location?,
     onBackToMainScreen: () -> Unit,
     onAddAttraction: (LatLng) -> Unit,
-    attractionViewModel: AttractionViewModel = viewModel()
+    attractionViewModel: AttractionViewModel = viewModel(),
+    onAttractionClick: (String) -> Unit,  // Add this callback for navigation
 ) {
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle()
@@ -87,10 +88,17 @@ fun MapScreen(
                         googleMap.addMarker(markerOptions)
                     }
 
-                    googleMap.setOnMapClickListener { latLng ->
-                        selectedLatLng = latLng
-                        showDialog = true
+                    googleMap.setOnMarkerClickListener { marker ->
+                        val selectedAttraction = attractions.find {
+                            it.latitude == marker.position.latitude && it.longitude == marker.position.longitude
+                        }
+                        selectedAttraction?.let {
+                            onAttractionClick(it.id!!)
+                        }
+                        true
                     }
+
+
                 }
             }
 
@@ -201,11 +209,4 @@ fun ServiceControl() {
     }
 }
 
-fun GoogleMap.addAttractionMarker(latLng: LatLng) {
-    val markerOptions = MarkerOptions()
-        .position(latLng)
-        .title("New Attraction")
-        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-    this.addMarker(markerOptions)
-}
 

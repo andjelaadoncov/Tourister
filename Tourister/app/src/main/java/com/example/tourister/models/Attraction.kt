@@ -1,6 +1,10 @@
 package com.example.tourister.models
 
+import com.google.firebase.firestore.DocumentId
+
 data class Attraction(
+    @DocumentId
+    val id: String? = null,
     val name: String = "",
     val description: String = "",
     val photoUrl: String? = null,
