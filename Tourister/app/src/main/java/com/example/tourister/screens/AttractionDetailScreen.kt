@@ -16,8 +16,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.twotone.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -372,7 +374,7 @@ fun StarRatingBar(
     ) {
         for (i in 1..starCount) {
             Icon(
-                imageVector = if (i <= rating) Icons.Filled.Star else Icons.Outlined.Star,
+                imageVector = if (i <= rating) Icons.Filled.Star else Icons.TwoTone.Star,
                 contentDescription = null,
                 modifier = Modifier
                     .size(starSize.dp)
