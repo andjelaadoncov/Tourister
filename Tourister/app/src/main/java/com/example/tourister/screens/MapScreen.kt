@@ -4,8 +4,10 @@ import LocationService
 import android.content.Intent
 import android.location.Location
 import android.os.Build
+import android.widget.DatePicker
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,6 +27,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.example.tourister.R
 import com.example.tourister.viewModels.AttractionViewModel
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import java.util.Calendar
 
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +45,86 @@ fun MapScreen(
     var showDialog by remember { mutableStateOf(false) }
     var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
     val attractions by attractionViewModel.attractions.collectAsState()
+    var selectedAttractionType by remember { mutableStateOf<String?>(null) }
+    var selectedRating by remember { mutableStateOf<Float?>(null) }
+    var selectedDate by remember { mutableStateOf<Long?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) } // State to control DatePickerDialog
+
+    val calendar = Calendar.getInstance()
+    val userLocation = location?.let { LatLng(it.latitude, it.longitude) }
+
+    // Side-effect to show DatePickerDialog when showDatePicker changes to true
+    if (showDatePicker) {
+        android.app.DatePickerDialog(
+            context,
+            { _: DatePicker, year: Int, month: Int, day: Int ->
+                calendar.set(year, month, day)
+                selectedDate = calendar.timeInMillis
+                showDatePicker = false
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
+    fun updateMarkers(googleMap: GoogleMap,  userLocation: LatLng?) {
+        googleMap.clear() // Clear existing markers
+
+        userLocation?.let {
+            val locationMarkerOptions = MarkerOptions()
+                .position(it)
+                .title("Your Location")
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+            googleMap.addMarker(locationMarkerOptions)
+        }
+
+        // Filter attractions based on selected filters
+        val filteredAttractions = attractions.filter { attraction ->
+            (selectedAttractionType == null || attraction.attractionType == selectedAttractionType) &&
+                    (selectedRating == null || attraction.averageRating >= selectedRating!!) &&
+                    (selectedDate == null || isSameDay(attraction.createdAt, selectedDate!!))
+        }
+
+        // Add markers for filtered attractions
+        filteredAttractions.forEach { attraction ->
+            val latLng = LatLng(attraction.latitude, attraction.longitude)
+            val markerOptions = MarkerOptions()
+                .position(latLng)
+                .title(attraction.name)
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+
+            googleMap.addMarker(markerOptions)
+        }
+
+        // Set up listeners for marker clicks
+        googleMap.setOnMarkerClickListener { marker ->
+            val selectedAttraction = filteredAttractions.find {
+                it.latitude == marker.position.latitude && it.longitude == marker.position.longitude
+            }
+            selectedAttraction?.let {
+                onAttractionClick(it.id!!)
+            }
+            true
+        }
+
+        // Set up listeners for map clicks
+        googleMap.setOnMapClickListener { latLng ->
+            val existingAttraction = filteredAttractions.find {
+                it.latitude == latLng.latitude && it.longitude == latLng.longitude
+            }
+            if (existingAttraction != null) {
+                onAttractionClick(existingAttraction.id!!)
+            } else {
+                selectedLatLng = latLng
+                showDialog = true
+            }
+        }
+    }
+
+    LaunchedEffect(selectedAttractionType, selectedRating, selectedDate) {
+        googleMapState.value?.let { updateMarkers(googleMap = it, userLocation = userLocation) }
+    }
 
     Scaffold(
         topBar = {
@@ -52,20 +135,129 @@ fun MapScreen(
                         IconButton(onClick = onBackToMainScreen) {
                             Icon(
                                 painter = painterResource(id = R.drawable.backarrow),
-                                contentDescription = "Back to Main Screen",
+                                contentDescription = "Back to Home Page",
                                 modifier = Modifier.size(32.dp)
                             )
                         }
                     }
                 )
                 ServiceControl()
+
+                var typeExpanded by remember { mutableStateOf(false) }
+                var ratingExpanded by remember { mutableStateOf(false) }
+                var dateExpanded by remember { mutableStateOf(false) }
+
+                Column{
+                    // Filter by Type
+                    Text(
+                        text = "Filter by Type",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { typeExpanded = !typeExpanded }
+                            .padding(vertical = 8.dp)
+                            .background(Color.Transparent)
+                            .padding(horizontal = 16.dp)
+                    )
+                    if (typeExpanded) {
+                        ExposedDropdownMenuBox(
+                            expanded = typeExpanded,
+                            onExpandedChange = { typeExpanded = !typeExpanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedAttractionType ?: "Select Type",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Attraction Type") },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = typeExpanded)
+                                },
+                                modifier = Modifier.menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = typeExpanded,
+                                onDismissRequest = { typeExpanded = false }
+                            ) {
+                                val attractionTypes = listOf(
+                                    "Historical Sites",
+                                    "Natural Attractions",
+                                    "Cultural Attractions",
+                                    "Entertainment Venues",
+                                    "Religious Sites",
+                                    "Architectural Marvels",
+                                    "Adventure Destinations"
+                                )
+                                attractionTypes.forEach { type ->
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text(type) },
+                                        onClick = {
+                                            selectedAttractionType = type
+                                            typeExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Filter by Rating
+                    Column(modifier = Modifier.background(Color(0xff395068))){
+                        Text(
+                            text = "Filter by Rating",
+                            color = Color.White,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { ratingExpanded = !ratingExpanded }
+                                .padding(vertical = 8.dp)
+                                .padding(horizontal = 16.dp)
+                        )
+                    }
+                    if (ratingExpanded) {
+                        Slider(
+                            value = selectedRating ?: 0f,
+                            onValueChange = { selectedRating = it },
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color(0xff395068),
+                                activeTrackColor = Color(0xff395068),
+                                inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                            ),
+                            valueRange = 0f..5f,
+                            steps = 4,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+
+                    // Filter by Date
+                    Text(
+                        text = "Filter by Date",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true }
+                            .padding(vertical = 8.dp)
+                            .background(Color.Transparent)
+                            .padding(horizontal = 16.dp)
+                    )
+                    if(dateExpanded){
+                        Text(
+                        text = selectedDate?.let {
+                            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+                            dateFormat.format(it)
+                        } ?: "Select Date",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                    }
+                }
+
             }
+
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
+            // The AndroidView to render the MapView
             AndroidView({ mapView }) { mapView ->
                 mapView.getMapAsync { googleMap ->
                     googleMapState.value = googleMap
+
+                    // Initial setup for location marker
                     location?.let {
                         val latLng = LatLng(it.latitude, it.longitude)
                         val markerOptions = MarkerOptions()
@@ -77,40 +269,11 @@ fun MapScreen(
                         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
                     }
 
-                    // Add markers for existing attractions
-                    attractions.forEach { attraction ->
-                        val latLng = LatLng(attraction.latitude, attraction.longitude)
-                        val markerOptions = MarkerOptions()
-                            .position(latLng)
-                            .title(attraction.name)
-                            .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-
-                        googleMap.addMarker(markerOptions)
-                    }
-
-                    googleMap.setOnMarkerClickListener { marker ->
-                        val selectedAttraction = attractions.find {
-                            it.latitude == marker.position.latitude && it.longitude == marker.position.longitude
-                        }
-                        selectedAttraction?.let {
-                            onAttractionClick(it.id!!)
-                        }
-                        true
-                    }
-
-                    googleMap.setOnMapClickListener { latLng ->
-                        val existingAttraction = attractions.find {
-                            it.latitude == latLng.latitude && it.longitude == latLng.longitude
-                        }
-                        if (existingAttraction != null) {
-                            onAttractionClick(existingAttraction.id!!)
-                        } else {
-                            selectedLatLng = latLng
-                            showDialog = true
-                        }
-                    }
+                    updateMarkers(googleMap = googleMap, userLocation)
                 }
             }
+
+
 
             // Adding Zoom Buttons
             Column(
@@ -220,3 +383,10 @@ fun ServiceControl() {
 }
 
 
+fun isSameDay(date1: Long, date2: Long): Boolean {
+    val cal1 = Calendar.getInstance().apply { timeInMillis = date1 }
+    val cal2 = Calendar.getInstance().apply { timeInMillis = date2 }
+    return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) &&
+            cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
+            cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH)
+}
