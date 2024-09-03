@@ -97,7 +97,9 @@ fun MainAppScreen(
                 )
             }
             composable("profile") {
-                Text(text = "Home Screen", fontSize = 24.sp)
+                ProfileScreen(
+                    onBackToHome = { navController.navigateUp() }
+                )
             }
             composable("attractionsList") {
                 AttractionsListScreen(
