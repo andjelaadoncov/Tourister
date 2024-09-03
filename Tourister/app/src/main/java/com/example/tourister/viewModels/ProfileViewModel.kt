@@ -12,12 +12,15 @@ class ProfileViewModel : ViewModel() {
     private val _userData = MutableStateFlow<User?>(null)
     val userData: StateFlow<User?> = _userData
 
+
     private val auth = FirebaseAuth.getInstance()
     private val firestore = FirebaseFirestore.getInstance()
+
 
     init {
         loadUserProfile()
     }
+
 
     private fun loadUserProfile() {
         val currentUser = auth.currentUser
@@ -31,14 +34,6 @@ class ProfileViewModel : ViewModel() {
                 .addOnFailureListener { exception ->
                     // Handle any errors here
                 }
-        }
-    }
-
-    fun updatePoints(newPoints: Int) {
-        _userData.value?.let { user ->
-            val updatedUser = user.copy(points = user.points + newPoints)
-            // Update user data in the database and in _userData
-            _userData.value = updatedUser
         }
     }
 

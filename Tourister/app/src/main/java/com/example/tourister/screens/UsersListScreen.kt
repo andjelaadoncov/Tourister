@@ -1,6 +1,6 @@
 package com.example.tourister.screens
 
-import androidx.compose.foundation.clickable
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -33,25 +34,24 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.tourister.R
-import com.example.tourister.models.Attraction
-import com.example.tourister.viewModels.AttractionViewModel
+import com.example.tourister.models.User
+import com.example.tourister.viewModels.UserListViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AttractionsListScreen(
-    attractionViewModel: AttractionViewModel = viewModel(),
-    navController: NavHostController,
-    onBackToMainScreen: () -> Unit
-) {
-    val attractions by attractionViewModel.attractions.collectAsState()
+fun UsersListScreen(userListViewModel: UserListViewModel = viewModel(), onBackToMainScreen: () -> Unit) {
+    val users by userListViewModel.users.collectAsState()
+
+    LaunchedEffect(Unit) {
+        userListViewModel.loadUsers()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Attractions added by users", fontSize = 24.sp, color = Color(0xff395068)) },
+                title = { Text(text = "Tourister LeaderBoard", fontSize = 24.sp, color = Color(0xff395068)) },
                 navigationIcon = {
                     IconButton(onClick = onBackToMainScreen) {
                         Icon(
@@ -68,36 +68,35 @@ fun AttractionsListScreen(
             contentPadding = paddingValues,
             modifier = Modifier.padding(16.dp)
         ) {
-            items(attractions) { attraction ->
-                AttractionItem(attraction = attraction, onClick = {
-                    navController.navigate("attractionSummary/${attraction.id}")
-                })
+            items(users) { user ->
+                UserItem(user = user)
             }
         }
     }
 }
 
 @Composable
-fun AttractionItem(attraction: Attraction, onClick: () -> Unit) {
+fun UserItem(user: User) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable(onClick = onClick),
+            .padding(vertical = 8.dp),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
             AsyncImage(
-                model = attraction.photoUrl,
-                contentDescription = "Attraction Image",
+                model = user.profileImageUrl,
+                contentDescription = "Profile Image",
                 modifier = Modifier.size(100.dp).clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(text = attraction.name, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Text(text = user.username, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(text = attraction.description, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(text = user.fullName, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(text = "Points: ${user.points}", fontWeight = FontWeight.Bold, color = Color.Gray)
             }
         }
     }

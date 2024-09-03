@@ -3,11 +3,13 @@ package com.example.tourister.screens
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -28,6 +30,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.tourister.R
 import com.example.tourister.viewModels.AttractionViewModel
 import com.example.tourister.viewModels.LocationViewModel
+import com.example.tourister.viewModels.ProfileViewModel
+import com.example.tourister.viewModels.UserListViewModel
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -38,6 +42,7 @@ import kotlinx.coroutines.launch
 fun MainAppScreen(
     locationViewModel: LocationViewModel = viewModel(),
     attractionViewModel: AttractionViewModel = viewModel(), // Add AttractionViewModel
+    userListViewModel: UserListViewModel = viewModel(),
     onLogout: () -> Unit
 ) {
     val auth = FirebaseAuth.getInstance()
@@ -104,7 +109,15 @@ fun MainAppScreen(
             composable("attractionsList") {
                 AttractionsListScreen(
                     attractionViewModel = attractionViewModel,
-                    navController = navController
+                    navController = navController,
+                    onBackToMainScreen = { navController.navigate("home") }
+                )
+            }
+
+            composable("users") {
+                UsersListScreen(
+                   userListViewModel = userListViewModel,
+                    onBackToMainScreen = { navController.navigate("home") }
                 )
             }
             composable("addAttraction/{latitude}/{longitude}") { backStackEntry ->
@@ -193,7 +206,7 @@ fun NavigationBar(navController: NavHostController) {
         modifier = Modifier.fillMaxWidth()  // Ovaj modifikator osigurava da NavigationBar popuni celu širinu
     ){
         Row(
-            modifier = Modifier.fillMaxWidth(),  // Osigurava da Row popuni celu širinu
+            modifier = Modifier.fillMaxWidth(), // Osigurava da Row popuni celu širinu
             horizontalArrangement = Arrangement.SpaceAround  // Ravnomerno rasporedi stavke
         ) {
             NavigationBarItem(
@@ -261,7 +274,25 @@ fun NavigationBar(navController: NavHostController) {
                                 .size(30.dp)
                                 .padding(end = 3.dp)
                         )
-                        Text("Attractions", color = Color.White, fontSize = 15.sp)
+                        Text("Sites", color = Color.White, fontSize = 15.sp)
+                    }
+                }
+            )
+
+            NavigationBarItem(
+                selected = false,
+                onClick = { navController.navigate("users") },
+                icon = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ranking),
+                            contentDescription = "Rankings",
+                            tint = Color.White,
+                            modifier = Modifier
+                                .size(30.dp)
+                                .padding(end = 3.dp)
+                        )
+                        Text("Ranks", color = Color.White, fontSize = 15.sp)
                     }
                 }
             )

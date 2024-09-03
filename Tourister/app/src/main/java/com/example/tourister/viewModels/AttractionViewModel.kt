@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tourister.models.Attraction
 import com.example.tourister.models.Review
+import com.example.tourister.models.User
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,6 +16,8 @@ class AttractionViewModel : ViewModel() {
     // MutableStateFlow for storing the list of attractions
     private val _attractions = MutableStateFlow<List<Attraction>>(emptyList())
     val attractions: StateFlow<List<Attraction>> = _attractions
+
+
 
     init {
         loadAttractions() //za ucitavanje svih lokacija na pocetku
@@ -145,9 +148,9 @@ class AttractionViewModel : ViewModel() {
         }
     }
 
-    fun getAttractionById(attractionId: String): Attraction? {
-        return attractions.value.find { it.id == attractionId }
-    }
+//    fun getAttractionById(attractionId: String): Attraction? {
+//        return attractions.value.find { it.id == attractionId }
+//    }
 
     private fun awardPointsToUser(userId: String, points: Int) {
         val db = FirebaseFirestore.getInstance()
@@ -163,9 +166,8 @@ class AttractionViewModel : ViewModel() {
         }.addOnFailureListener { e ->
             Log.e("AwardPoints", "Failed to award points", e)
         }
+
     }
-
-
 }
 
 
