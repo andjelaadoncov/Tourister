@@ -33,4 +33,13 @@ class ProfileViewModel : ViewModel() {
                 }
         }
     }
+
+    fun updatePoints(newPoints: Int) {
+        _userData.value?.let { user ->
+            val updatedUser = user.copy(points = user.points + newPoints)
+            // Update user data in the database and in _userData
+            _userData.value = updatedUser
+        }
+    }
+
 }

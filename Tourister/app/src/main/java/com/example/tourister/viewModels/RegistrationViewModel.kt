@@ -111,7 +111,8 @@ class RegistrationViewModel : ViewModel() {
             "fullName" to fullName,
             "phoneNumber" to phoneNumber,
             "password" to password,
-            "profileImageUrl" to profileImageUrl?.toString()
+            "profileImageUrl" to profileImageUrl?.toString(),
+            "points" to 0
         )
 
         firestore.collection("users").document(userId)

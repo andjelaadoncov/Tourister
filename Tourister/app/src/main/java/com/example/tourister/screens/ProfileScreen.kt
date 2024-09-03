@@ -115,6 +115,19 @@ fun ProfileScreen(
                         color = Color.Black
                     )
 
+                    Spacer(modifier = Modifier.height(10.dp))
+                    // Display points
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("Points: ")
+                            }
+                            append(it.points.toString())
+                        },
+                        fontSize = 20.sp,
+                        color = Color.Black
+                    )
+
                     // Spacer
                     Spacer(modifier = Modifier.height(24.dp))
 

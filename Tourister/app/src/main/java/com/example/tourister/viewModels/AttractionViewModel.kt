@@ -23,6 +23,7 @@ class AttractionViewModel : ViewModel() {
     // Function to add an attraction to Firebase and update the state
     fun addAttraction(
         attraction: Attraction,
+        userId: String,
         onSuccess: (String) -> Unit,  // Return the ID of the saved attraction
         onFailure: (Exception) -> Unit
     ) {
@@ -31,6 +32,7 @@ class AttractionViewModel : ViewModel() {
             .add(attraction)
             .addOnSuccessListener { documentReference ->
                 Log.d("SaveAttraction", "Attraction added successfully with ID: ${documentReference.id}")
+                awardPointsToUser(userId, 10)
                 onSuccess(documentReference.id)  // Pass the ID back
             }
             .addOnFailureListener { exception ->
@@ -114,6 +116,7 @@ class AttractionViewModel : ViewModel() {
                         "averageRating" to newAverageRating,
                         "numberOfReviews" to newNumberOfReviews
                     ))
+                    awardPointsToUser(review.userId, 5)
                 }
             }
         }.addOnSuccessListener {
@@ -145,6 +148,24 @@ class AttractionViewModel : ViewModel() {
     fun getAttractionById(attractionId: String): Attraction? {
         return attractions.value.find { it.id == attractionId }
     }
+
+    private fun awardPointsToUser(userId: String, points: Int) {
+        val db = FirebaseFirestore.getInstance()
+        val userRef = db.collection("users").document(userId)
+
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(userRef)
+            val currentPoints = snapshot.getLong("points") ?: 0
+            val newPoints = currentPoints + points
+            transaction.update(userRef, "points", newPoints)
+        }.addOnSuccessListener {
+            Log.d("AwardPoints", "Points awarded successfully")
+        }.addOnFailureListener { e ->
+            Log.e("AwardPoints", "Failed to award points", e)
+        }
+    }
+
+
 }
 
 

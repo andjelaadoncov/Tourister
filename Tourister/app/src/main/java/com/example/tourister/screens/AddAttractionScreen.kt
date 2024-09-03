@@ -236,6 +236,7 @@ fun AddAttractionScreen(
                     )
                     attractionViewModel.addAttraction(
                         attraction,
+                        currentUserId,
                         {
                             // On success
                             attractionViewModel.loadAttractions()
