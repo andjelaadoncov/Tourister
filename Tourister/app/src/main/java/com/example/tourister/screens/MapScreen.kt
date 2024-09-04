@@ -46,8 +46,9 @@ fun MapScreen(
     var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
     val attractions by attractionViewModel.attractions.collectAsState()
     var selectedAttractionType by remember { mutableStateOf<String?>(null) }
-    var selectedRating by remember { mutableStateOf<Float?>(null) }
+    var selectedRating by remember { mutableStateOf<Float?>(0f) }
     var selectedDate by remember { mutableStateOf<Long?>(null) }
+    var selectedRadius by remember { mutableDoubleStateOf(10.0) } // Default radius is 10 km
     var showDatePicker by remember { mutableStateOf(false) } // State to control DatePickerDialog
 
     val calendar = Calendar.getInstance()
@@ -79,9 +80,32 @@ fun MapScreen(
             googleMap.addMarker(locationMarkerOptions)
         }
 
-        // Filter attractions based on selected filters
+        // Filter attractions based on selected filters and radius
         val filteredAttractions = attractions.filter { attraction ->
-            (selectedAttractionType == null || attraction.attractionType == selectedAttractionType) &&
+            val attractionLocation = Location("").apply {
+                latitude = attraction.latitude
+                longitude = attraction.longitude
+            }
+
+            val userLocationObj = userLocation?.let {
+                Location("").apply {
+                    latitude = it.latitude
+                    longitude = it.longitude
+                }
+            } ?: Location("").apply {
+                latitude = 0.0
+                longitude = 0.0
+            }
+
+            val distanceInMeters = userLocationObj.distanceTo(attractionLocation)
+
+            //Log.d("HELPER","Attraction: ${attraction.name}, Distance: $distanceInMeters, Radius: ${radiusInKm * 1000}")
+
+
+            val isWithinRadius = distanceInMeters <= selectedRadius * 1000
+
+            isWithinRadius &&
+                    (selectedAttractionType == null || attraction.attractionType == selectedAttractionType) &&
                     (selectedRating == null || attraction.averageRating >= selectedRating!!) &&
                     (selectedDate == null || isSameDay(attraction.createdAt, selectedDate!!))
         }
@@ -122,7 +146,8 @@ fun MapScreen(
         }
     }
 
-    LaunchedEffect(selectedAttractionType, selectedRating, selectedDate) {
+
+    LaunchedEffect(selectedAttractionType, selectedRating, selectedDate, selectedRadius) {
         googleMapState.value?.let { updateMarkers(googleMap = it, userLocation = userLocation) }
     }
 
@@ -146,6 +171,7 @@ fun MapScreen(
                 var typeExpanded by remember { mutableStateOf(false) }
                 var ratingExpanded by remember { mutableStateOf(false) }
                 var dateExpanded by remember { mutableStateOf(false) }
+                var radiusExpanded by remember { mutableStateOf(false) }
 
                 Column{
                     // Filter by Type
@@ -187,7 +213,7 @@ fun MapScreen(
                                     "Adventure Destinations"
                                 )
                                 attractionTypes.forEach { type ->
-                                    androidx.compose.material3.DropdownMenuItem(
+                                    DropdownMenuItem(
                                         text = { Text(type) },
                                         onClick = {
                                             selectedAttractionType = type
@@ -221,8 +247,12 @@ fun MapScreen(
                                 inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
                             ),
                             valueRange = 0f..5f,
-                            steps = 4,
+                            steps = 10,
                             modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        Text(
+                            text = "Rating: ${"%.1f".format(selectedRating)} stars",
+                            modifier = Modifier.padding(vertical = 8.dp).padding(horizontal = 16.dp)
                         )
                     }
 
@@ -244,6 +274,38 @@ fun MapScreen(
                         } ?: "Select Date",
                         modifier = Modifier.padding(16.dp)
                     )
+                    }
+
+                    // Filter by Radius
+                    Column(modifier = Modifier.background(Color(0xff395068))){
+                        Text(
+                            text = "Filter by Radius",
+                            color = Color.White,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { radiusExpanded = !radiusExpanded }
+                                .padding(vertical = 8.dp)
+                                .padding(horizontal = 16.dp)
+                        )
+                    }
+                    if(radiusExpanded){
+                        Slider(
+                            value = selectedRadius.toFloat(),
+                            onValueChange = { selectedRadius = it.toDouble() },
+                            colors = SliderDefaults.colors(
+                                thumbColor = Color(0xff395068),
+                                activeTrackColor = Color(0xff395068),
+                                inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
+                            ),
+                            valueRange = 1f..50f, // Radius range from 1 km to 50 km
+                            steps = 19,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+
+                        Text(
+                            text = "Radius: ${"%.1f".format(selectedRadius)} km",
+                            modifier = Modifier.padding(vertical = 8.dp).padding(horizontal = 16.dp)
+                        )
                     }
                 }
 
