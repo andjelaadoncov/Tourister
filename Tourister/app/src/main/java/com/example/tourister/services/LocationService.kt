@@ -1,3 +1,5 @@
+package com.example.tourister.services
+
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.*
@@ -7,6 +9,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import com.example.tourister.MainActivity
@@ -15,13 +18,19 @@ import com.google.android.gms.location.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 
 class LocationService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
+    private lateinit var currentLocation: Location
     private val firestore = FirebaseFirestore.getInstance()
     private val CHANNEL_ID = "LocationServiceChannel"
+    private val NEARBY_THRESHOLD_METERS = 2000 // 2 km
 
     override fun onCreate() {
         super.onCreate()
@@ -40,7 +49,8 @@ class LocationService : Service() {
         startForeground(1, notification)
 
         startLocationUpdates()
-        listenForNotifications()
+        //listenForNotifications()
+        listenForAttractions()
 
         return START_STICKY
     }
@@ -56,6 +66,7 @@ class LocationService : Service() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult ?: return
                 for (location in locationResult.locations) {
+                    currentLocation = location // Update current location
                     sendLocationToServer(location)
                 }
             }
@@ -98,32 +109,96 @@ class LocationService : Service() {
             .whereEqualTo("userId", getCurrentUserId())
             .addSnapshotListener { snapshots, e ->
                 if (e != null) {
-                    // Greška pri slušanju
+                    Log.d("HELPER","Firestore error: ${e.message}")
                     return@addSnapshotListener
                 }
 
+                Log.d("HELPER","Snapshot size: ${snapshots?.size()}")
+
                 for (doc in snapshots!!) {
-                    // Proverite uslove za notifikaciju
-                    showNotification(doc)
+                    if (isNearbyAttraction(doc)) {
+                        Log.d("HELPER","Nearby attraction found")
+                        showNotification(doc)
+                    }
                 }
             }
+
+    }
+
+    private fun listenForAttractions() {
+        firestore.collection("attractions")
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                querySnapshot.documents.forEach { doc ->
+                    if (isNearbyAttraction(doc)) {
+                        Log.d("HELPER", "Nearby attraction found: ${doc.getString("name")}")
+                        showNotification(doc)
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.d("HELPER", "Firestore error: ${e.message}")
+            }
+    }
+
+
+    private fun isNearbyAttraction(doc: DocumentSnapshot): Boolean {
+        // Fetch the attraction's latitude and longitude from the document
+        val attractionLatitude = doc.getDouble("latitude") ?: return false
+        val attractionLongitude = doc.getDouble("longitude") ?: return false
+
+        // Calculate the distance between the current location and the attraction
+        val distance = calculateDistance(
+            currentLocation.latitude,
+            currentLocation.longitude,
+            attractionLatitude,
+            attractionLongitude
+        )
+
+        Log.d("HELPER","Distance to attraction: $distance meters")
+
+        // Return true if the attraction is within the nearby threshold
+        return distance <= NEARBY_THRESHOLD_METERS
+    }
+
+
+    private fun calculateDistance(
+        lat1: Double, lon1: Double,
+        lat2: Double, lon2: Double
+    ): Double {
+        val R = 6371e3 // Earth radius in meters
+        val phi1 = Math.toRadians(lat1)
+        val phi2 = Math.toRadians(lat2)
+        val deltaPhi = Math.toRadians(lat2 - lat1)
+        val deltaLambda = Math.toRadians(lon2 - lon1)
+
+        val a = sin(deltaPhi / 2) * sin(deltaPhi / 2) +
+                cos(phi1) * cos(phi2) *
+                sin(deltaLambda / 2) * sin(deltaLambda / 2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+        return R * c // Distance in meters
     }
 
     private fun showNotification(doc: DocumentSnapshot) {
         val notificationIntent = Intent(this, MainActivity::class.java)
         notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0)
+
+        val notificationId = doc.id.hashCode() // Generisanje jedinstvenog ID-a na osnovu ID-a dokumenta
+        val pendingIntent = PendingIntent.getActivity(this, notificationId, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Novi Objekat ili Korisnik u Blizini")
-            .setContentText("Kliknite da vidite detalje.")
+            .setContentTitle("Attraction Nearby: ${doc.getString("name")}")
+            .setContentText("Click to see details.")
             .setSmallIcon(R.drawable.bell)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .build()
 
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(2, notification)
+        notificationManager.notify(notificationId, notification)
+
+        Log.d("HELPER", "Showing notification for: ${doc.getString("name")}")
     }
 
 

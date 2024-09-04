@@ -1,6 +1,6 @@
 package com.example.tourister.screens
 
-import LocationService
+import  com.example.tourister.services.LocationService
 import android.content.Intent
 import android.location.Location
 import android.os.Build

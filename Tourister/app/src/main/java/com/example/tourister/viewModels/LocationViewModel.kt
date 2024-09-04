@@ -60,6 +60,7 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
     fun setInitialLocation(location: Location?) {
         _location.value = location
     }
+
 }
 
 
