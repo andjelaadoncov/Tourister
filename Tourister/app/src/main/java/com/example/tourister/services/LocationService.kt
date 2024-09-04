@@ -49,7 +49,6 @@ class LocationService : Service() {
         startForeground(1, notification)
 
         startLocationUpdates()
-        //listenForNotifications()
         listenForAttractions()
 
         return START_STICKY
@@ -94,35 +93,13 @@ class LocationService : Service() {
             "timestamp" to System.currentTimeMillis()
         )
 
-        firestore.collection("locations")
-            .add(data)
-            .addOnSuccessListener {
-                // Lokacija uspešno poslana
-            }
-            .addOnFailureListener {
-                // Greška pri slanju lokacije
-            }
-    }
-
-    private fun listenForNotifications() {
-        firestore.collection("notifications")
-            .whereEqualTo("userId", getCurrentUserId())
-            .addSnapshotListener { snapshots, e ->
-                if (e != null) {
-                    Log.d("HELPER","Firestore error: ${e.message}")
-                    return@addSnapshotListener
-                }
-
-                Log.d("HELPER","Snapshot size: ${snapshots?.size()}")
-
-                for (doc in snapshots!!) {
-                    if (isNearbyAttraction(doc)) {
-                        Log.d("HELPER","Nearby attraction found")
-                        showNotification(doc)
-                    }
-                }
-            }
-
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            val userRef = FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(FirebaseAuth.getInstance().currentUser!!.uid)
+            userRef.update("lat", location.latitude)
+            userRef.update("lng", location.longitude)
+        }
     }
 
     private fun listenForAttractions() {

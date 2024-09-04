@@ -87,9 +87,8 @@ fun MainAppScreen(
                AboutScreen()
             }
             composable("map") {
-                val location by locationViewModel.location.observeAsState()
                 MapScreen(
-                    location = location,
+                    locationViewModel = locationViewModel,
                     onBackToMainScreen = { navController.navigate("home") },
                     onAddAttraction = { latLng ->
                         navController.navigate("addAttraction/${latLng.latitude}/${latLng.longitude}")
@@ -168,11 +167,6 @@ fun MainAppScreen(
                 )
             }
 
-        }
-
-        LaunchedEffect(Unit) {
-            Log.d("nikola", "LaunchedEffect")
-            locationViewModel.startLocationUpdates()
         }
 
         // Logout confirmation dialog

@@ -1,7 +1,9 @@
 package com.example.tourister.screens
 
+import android.Manifest
 import  com.example.tourister.services.LocationService
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Build
 import android.widget.DatePicker
@@ -11,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -18,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -26,6 +30,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.example.tourister.R
 import com.example.tourister.viewModels.AttractionViewModel
+import com.example.tourister.viewModels.LocationViewModel
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import java.util.Calendar
 
@@ -33,7 +38,7 @@ import java.util.Calendar
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
-    location: Location?,
+    locationViewModel: LocationViewModel,
     onBackToMainScreen: () -> Unit,
     onAddAttraction: (LatLng) -> Unit,
     attractionViewModel: AttractionViewModel = viewModel(),
@@ -50,6 +55,8 @@ fun MapScreen(
     var selectedDate by remember { mutableStateOf<Long?>(null) }
     var selectedRadius by remember { mutableDoubleStateOf(10.0) } // Default radius is 10 km
     var showDatePicker by remember { mutableStateOf(false) } // State to control DatePickerDialog
+
+    val location by locationViewModel.location.observeAsState()
 
     val calendar = Calendar.getInstance()
     val userLocation = location?.let { LatLng(it.latitude, it.longitude) }
@@ -146,9 +153,29 @@ fun MapScreen(
         }
     }
 
+    fun updateLocation(location: LatLng) {
+        googleMapState.value?.let {
+            val latLng = LatLng(location.latitude, location.longitude)
+            val markerOptions = MarkerOptions()
+                .position(latLng)
+                .title("Your Location")
+
+            it.clear() // Clear previous markers
+            it.addMarker(markerOptions)
+            it.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+        }
+    }
+
 
     LaunchedEffect(selectedAttractionType, selectedRating, selectedDate, selectedRadius) {
         googleMapState.value?.let { updateMarkers(googleMap = it, userLocation = userLocation) }
+    }
+
+    LaunchedEffect(location) {
+        // Initial setup for location marker
+        location?.let {
+            updateLocation(it)
+        }
     }
 
     Scaffold(
@@ -252,7 +279,9 @@ fun MapScreen(
                         )
                         Text(
                             text = "Rating: ${"%.1f".format(selectedRating)} stars",
-                            modifier = Modifier.padding(vertical = 8.dp).padding(horizontal = 16.dp)
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .padding(horizontal = 16.dp)
                         )
                     }
 
@@ -304,7 +333,9 @@ fun MapScreen(
 
                         Text(
                             text = "Radius: ${"%.1f".format(selectedRadius)} km",
-                            modifier = Modifier.padding(vertical = 8.dp).padding(horizontal = 16.dp)
+                            modifier = Modifier
+                                .padding(vertical = 8.dp)
+                                .padding(horizontal = 16.dp)
                         )
                     }
                 }
@@ -318,17 +349,18 @@ fun MapScreen(
             AndroidView({ mapView }) { mapView ->
                 mapView.getMapAsync { googleMap ->
                     googleMapState.value = googleMap
-
-                    // Initial setup for location marker
+                    if (ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        googleMap.isMyLocationEnabled = true
+                    }
                     location?.let {
-                        val latLng = LatLng(it.latitude, it.longitude)
-                        val markerOptions = MarkerOptions()
-                            .position(latLng)
-                            .title("Your Location")
-
-                        googleMap.clear() // Clear previous markers
-                        googleMap.addMarker(markerOptions)
-                        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
+                        updateLocation(it)
                     }
 
                     updateMarkers(googleMap = googleMap, userLocation)
@@ -368,14 +400,17 @@ fun MapScreen(
             }
         }
 
-        if (showDialog && selectedLatLng != null) {
+        if (showDialog) {
+            location?.let {
             AddAttractionDialog(
                 onDismiss = { showDialog = false },
                 onConfirm = {
-                    onAddAttraction(selectedLatLng!!)
+                    onAddAttraction(LatLng(it.latitude, it.longitude))
                     showDialog = false
                 }
             )
+
+            }
         }
     }
 }
@@ -421,6 +456,8 @@ fun rememberMapViewWithLifecycle(): MapView {
 @Composable
 fun ServiceControl() {
     val context = LocalContext.current
+    var isServiceRunning by remember { mutableStateOf(false) }
+
 
     Row(
         modifier = Modifier
@@ -431,14 +468,19 @@ fun ServiceControl() {
         Button(onClick = {
             val serviceIntent = Intent(context, LocationService::class.java)
             context.startForegroundService(serviceIntent)
-        }) {
+            isServiceRunning = true
+        },
+            enabled = !isServiceRunning // Dugme je onemogućeno kada je servis pokrenut
+        ) {
             Text("Start Service")
         }
 
         Button(onClick = {
             val serviceIntent = Intent(context, LocationService::class.java)
             context.stopService(serviceIntent)
-        }) {
+            isServiceRunning = false
+        },
+        ) {
             Text("Stop Service")
         }
     }

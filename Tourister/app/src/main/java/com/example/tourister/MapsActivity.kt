@@ -17,6 +17,7 @@ import com.google.android.gms.maps.model.MarkerOptions
 import com.example.tourister.databinding.ActivityMapsBinding
 import com.example.tourister.viewModels.LocationViewModel
 
+@Deprecated("")
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
