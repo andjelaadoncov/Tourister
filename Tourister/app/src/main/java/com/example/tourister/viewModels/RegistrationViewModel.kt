@@ -1,5 +1,6 @@
 package com.example.tourister.viewModels
 
+import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Log
 import androidx.compose.runtime.getValue
@@ -13,6 +14,9 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class RegistrationViewModel : ViewModel() {
     var username by mutableStateOf("")
@@ -28,6 +32,9 @@ class RegistrationViewModel : ViewModel() {
         private set
 
     var profileImageUri by mutableStateOf<Uri?>(null)
+        private set
+
+    var profileBitmap by mutableStateOf<Bitmap?>(null)
         private set
 
     private val auth = FirebaseAuth.getInstance()
@@ -54,6 +61,10 @@ class RegistrationViewModel : ViewModel() {
         profileImageUri = newUri
     }
 
+    fun onProfileBitmapChange(newBitmap: Bitmap?) {
+        profileBitmap = newBitmap
+    }
+
     fun registerUser(onSuccess: (Uri?) -> Unit, onError: (Exception) -> Unit) {
         viewModelScope.launch {
             try {
@@ -67,12 +78,34 @@ class RegistrationViewModel : ViewModel() {
 
                 user?.updateProfile(profileUpdates)?.await()
 
-                uploadProfileImage(profileImageUri, user!!.uid) { imageUrl ->
+                val imageUri = if (profileBitmap != null) {
+                    uploadBitmapAsImage(profileBitmap!!, user!!.uid)
+                } else {
+                    profileImageUri
+                }
+
+                uploadProfileImage(imageUri, user!!.uid) { imageUrl ->
                     saveUserDataToFirestore(user.uid, imageUrl, onSuccess, onError)
                 }
+
             } catch (e: Exception) {
                 onError(e) // Trigger error callback
             }
+        }
+    }
+
+    private fun uploadBitmapAsImage(bitmap: Bitmap, userId: String): Uri? {
+        return try {
+            // Save bitmap to a temporary file
+            val file = File.createTempFile("profile_image_$userId", ".jpg")
+            val outputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)
+            outputStream.flush()
+            outputStream.close()
+            Uri.fromFile(file)
+        } catch (e: IOException) {
+            Log.e("RegistrationViewModel", "Failed to convert bitmap to file", e)
+            null
         }
     }
 

@@ -19,8 +19,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.tourister.R
 import com.example.tourister.viewModels.RegistrationViewModel
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -37,6 +39,13 @@ fun RegistrationScreen(
 ) {
     val pickImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         registrationViewModel.onProfileImageUriChange(uri)
+    }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
+        bitmap?.let {
+            // Convert the bitmap to a URI if needed, or save it directly
+            registrationViewModel.onProfileBitmapChange(it)
+        }
     }
 
     val username = registrationViewModel.username
@@ -171,6 +180,20 @@ fun RegistrationScreen(
                     modifier = Modifier.padding(top = 12.dp)
                 ) {
                     Text(text = "Select Profile Image")
+                }
+
+                Button(
+                    onClick = {
+                        takePictureLauncher.launch()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xff395068),
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(6.dp),
+                    modifier = Modifier.padding(top = 12.dp)
+                ) {
+                    Text(text = "Take photo")
                 }
 
                 Button(
