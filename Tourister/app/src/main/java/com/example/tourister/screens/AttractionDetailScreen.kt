@@ -39,6 +39,7 @@ import com.example.tourister.models.Attraction
 import com.example.tourister.models.Review
 import com.example.tourister.viewModels.AttractionViewModel
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
@@ -68,11 +69,17 @@ fun AttractionDetailScreen(
     var rating by remember { mutableFloatStateOf(0f) }
     var userReview by remember { mutableStateOf<Review?>(null) }
 
+    val fullNames by attractionViewModel.fullNames.collectAsState()
+    val fullName = fullNames[attraction?.addedByUserId] ?: "Unknown"
+
     // Load attraction details when the screen is composed
-    LaunchedEffect(attractionId) {
+    LaunchedEffect(attractionId, attraction?.addedByUserId) {
         attractionViewModel.loadAttractionDetails(attractionId) { fetchedAttraction ->
             attraction = fetchedAttraction
         }
+
+        attraction?.addedByUserId?.let { attractionViewModel.fetchUserFullName(it) }
+
 
         // Load the user's existing review, if any
         attractionViewModel.loadUserReview(attractionId, currentUserId) { existingReview ->
@@ -201,6 +208,24 @@ fun AttractionDetailScreen(
                             append("Average Rating: ")
                         }
                         append("${attraction?.averageRating ?: "No ratings yet"} (${attraction?.numberOfReviews} reviews)")
+                    },
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Normal
+                    ),
+                    color = Color.Black,
+                    textAlign = TextAlign.Justify,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Added by: ")
+                        }
+                        append(fullName)
                     },
                     style = TextStyle(
                         fontSize = 20.sp,

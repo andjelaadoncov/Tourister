@@ -13,10 +13,14 @@ import kotlinx.coroutines.launch
 
 class AttractionViewModel : ViewModel() {
 
+    private val db = FirebaseFirestore.getInstance()
+
     // MutableStateFlow for storing the list of attractions
     private val _attractions = MutableStateFlow<List<Attraction>>(emptyList())
     val attractions: StateFlow<List<Attraction>> = _attractions
 
+    private val _fullNames = MutableStateFlow<Map<String, String>>(emptyMap())
+    val fullNames: StateFlow<Map<String, String>> = _fullNames
 
 
     init {
@@ -167,6 +171,21 @@ class AttractionViewModel : ViewModel() {
             Log.e("AwardPoints", "Failed to award points", e)
         }
 
+    }
+
+    fun fetchUserFullName(userId: String) {
+        viewModelScope.launch {
+            db.collection("users").document(userId).get()
+                .addOnSuccessListener { document ->
+                    val fullName = document.getString("fullName")
+                    if (fullName != null) {
+                        _fullNames.value += (userId to fullName)
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    Log.e("FetchUserFullName", "Failed to fetch user full name", exception)
+                }
+        }
     }
 }
 

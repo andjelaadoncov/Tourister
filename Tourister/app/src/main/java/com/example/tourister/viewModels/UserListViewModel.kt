@@ -35,6 +35,7 @@ class UserListViewModel : ViewModel() {
                     val fullName = document.getString("fullName") ?: "Unknown"
                     val profileImageUrl = document.getString("profileImageUrl")
                     val phoneNumber = document.getString("phoneNumber") ?: "Unknown"
+                    val password = document.getString("password") ?: "Unknown"
                     val points = document.getLong("points")?.toInt() ?: 0
 
 
@@ -42,6 +43,7 @@ class UserListViewModel : ViewModel() {
                         username = username,
                         fullName = fullName,
                         phoneNumber = phoneNumber,
+                        password = password,
                         profileImageUrl = profileImageUrl,
                         points = points
                     )

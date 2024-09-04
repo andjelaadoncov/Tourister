@@ -95,6 +95,18 @@ fun ProfileScreen(
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                                append("Password: ")
+                            }
+                            append(it.password)
+                        },
+                        fontSize = 20.sp,
+                        color = Color.Black
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = buildAnnotatedString {
+                            withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
                                 append("Full Name: ")
                             }
                             append(it.fullName)
@@ -107,7 +119,7 @@ fun ProfileScreen(
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                                append("Phone: ")
+                                append("Phone number: ")
                             }
                             append(it.phoneNumber)
                         },
