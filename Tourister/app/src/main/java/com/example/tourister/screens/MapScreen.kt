@@ -147,13 +147,12 @@ fun MapScreen(
             if (existingAttraction != null) {
                 onAttractionClick(existingAttraction.id!!)
             } else {
-                selectedLatLng = latLng
                 showDialog = true
             }
         }
     }
 
-    fun updateLocation(location: LatLng) {
+    fun updateLocation(location: LatLng) { //za update kamere i pin-a za trenutnu lokaciju
         googleMapState.value?.let {
             val latLng = LatLng(location.latitude, location.longitude)
             val markerOptions = MarkerOptions()
@@ -167,12 +166,12 @@ fun MapScreen(
     }
 
 
-    LaunchedEffect(selectedAttractionType, selectedRating, selectedDate, selectedRadius) {
+    LaunchedEffect(selectedAttractionType, selectedRating, selectedDate, selectedRadius) { //kad se promene state-ovi
         googleMapState.value?.let { updateMarkers(googleMap = it, userLocation = userLocation) }
     }
 
     LaunchedEffect(location) {
-        // Initial setup for location marker
+        // kad se promeni lokacija user-a
         location?.let {
             updateLocation(it)
         }
@@ -345,7 +344,7 @@ fun MapScreen(
         }
     ) { paddingValues ->
         Box(modifier = Modifier.padding(paddingValues)) {
-            // The AndroidView to render the MapView
+            // definisanje mape
             AndroidView({ mapView }) { mapView ->
                 mapView.getMapAsync { googleMap ->
                     googleMapState.value = googleMap
@@ -357,13 +356,13 @@ fun MapScreen(
                             Manifest.permission.ACCESS_COARSE_LOCATION
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
-                        googleMap.isMyLocationEnabled = true
+                        googleMap.isMyLocationEnabled = true //plavi kruzis za moju lokaciju
                     }
                     location?.let {
-                        updateLocation(it)
+                        updateLocation(it) //azuriranje lokacije kamere
                     }
 
-                    updateMarkers(googleMap = googleMap, userLocation)
+                    updateMarkers(googleMap = googleMap, userLocation) //prikazivanje markera
                 }
             }
 

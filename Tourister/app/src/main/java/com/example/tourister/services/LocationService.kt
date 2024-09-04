@@ -86,13 +86,6 @@ class LocationService : Service() {
     }
 
     private fun sendLocationToServer(location: Location) {
-        val data = hashMapOf(
-            "userId" to getCurrentUserId(),
-            "latitude" to location.latitude,
-            "longitude" to location.longitude,
-            "timestamp" to System.currentTimeMillis()
-        )
-
         if (FirebaseAuth.getInstance().currentUser != null) {
             val userRef = FirebaseFirestore.getInstance()
                 .collection("users")
@@ -172,16 +165,12 @@ class LocationService : Service() {
             .setAutoCancel(true)
             .build()
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager //salje notifikacije
         notificationManager.notify(notificationId, notification)
 
         Log.d("HELPER", "Showing notification for: ${doc.getString("name")}")
     }
 
-
-    private fun getCurrentUserId(): String {
-        return FirebaseAuth.getInstance().currentUser!!.uid
-    }
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
