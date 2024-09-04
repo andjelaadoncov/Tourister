@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,8 +27,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,11 +49,15 @@ fun AttractionSummaryScreen(
 ) {
     var attraction by remember { mutableStateOf<Attraction?>(null) }
 
+    val fullNames by attractionViewModel.fullNames.collectAsState()
+    val fullName = fullNames[attraction?.addedByUserId] ?: "Unknown"
+
     // Load attraction details when the screen is composed
-    LaunchedEffect(attractionId) {
+    LaunchedEffect(attractionId, attraction?.addedByUserId) {
         attractionViewModel.loadAttractionDetails(attractionId) { fetchedAttraction ->
             attraction = fetchedAttraction
         }
+        attraction?.addedByUserId?.let { attractionViewModel.fetchUserFullName(it) }
     }
 
     attraction?.let { attraction ->
@@ -134,6 +141,19 @@ fun AttractionSummaryScreen(
                             append("Average rating: ")
                         }
                         append(attraction.averageRating.toString())
+                    },
+                    fontSize = 16.sp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = buildAnnotatedString {
+                        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                            append("Added by: ")
+                        }
+                        append(fullName)
                     },
                     fontSize = 16.sp,
                     modifier = Modifier.fillMaxWidth()
