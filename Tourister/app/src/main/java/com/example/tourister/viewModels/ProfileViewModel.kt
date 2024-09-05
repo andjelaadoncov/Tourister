@@ -32,7 +32,7 @@ class ProfileViewModel : ViewModel() {
                     _userData.value = userData
                 }
                 .addOnFailureListener { exception ->
-                    // Handle any errors here
+                    //
                 }
         }
     }

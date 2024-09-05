@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -34,7 +33,7 @@ import com.example.tourister.R
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = viewModel(),
-    onBackToHome: () -> Unit // Callback for navigating back to home
+    onBackToHome: () -> Unit
 ) {
     val user by profileViewModel.userData.collectAsState()
 
@@ -54,7 +53,7 @@ fun ProfileScreen(
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    // Profile Image
+
                     it.profileImageUrl?.let { imageUrl ->
                         Image(
                             painter = rememberAsyncImagePainter(imageUrl),
@@ -62,24 +61,24 @@ fun ProfileScreen(
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(200.dp)
-                                .clip(CircleShape) // Make the image round
+                                .clip(CircleShape)
                                 .align(Alignment.CenterHorizontally)
                         )
                     } ?: run {
-                        // Placeholder if no image is available
+
                         Image(
                             painter = painterResource(id = R.drawable.placeholder),
                             contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .size(200.dp)
-                                .clip(CircleShape) // Make the image round
+                                .clip(CircleShape)
                                 .align(Alignment.CenterHorizontally)
                         )
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
-                    // User Details with bold labels
+
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -128,7 +127,7 @@ fun ProfileScreen(
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
-                    // Display points
+
                     Text(
                         text = buildAnnotatedString {
                             withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -140,15 +139,15 @@ fun ProfileScreen(
                         color = Color.Black
                     )
 
-                    // Spacer
+
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Back Button
+
                     Button(onClick = onBackToHome, modifier = Modifier.align(Alignment.CenterHorizontally)) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack, // Use the default back arrow icon
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back Arrow",
-                            modifier = Modifier.padding(end = 8.dp) // Add some space between the icon and the text
+                            modifier = Modifier.padding(end = 8.dp)
                         )
                         Text(text = "Back to Home")
                     }

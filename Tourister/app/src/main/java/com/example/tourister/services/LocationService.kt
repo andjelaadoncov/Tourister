@@ -65,7 +65,7 @@ class LocationService : Service() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult ?: return
                 for (location in locationResult.locations) {
-                    currentLocation = location // Update current location
+                    currentLocation = location // azuriranje trenutne lokacije
                     sendLocationToServer(location)
                 }
             }
@@ -74,7 +74,7 @@ class LocationService : Service() {
         // Provera dozvola
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
             ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // Dozvole nisu odobrene, ne možete pokrenuti ažuriranja lokacije
+            // dozvole nisu odobrene, ne moze da se pokrene azuriranja lokacije
             return
         }
 
@@ -85,6 +85,7 @@ class LocationService : Service() {
         )
     }
 
+    //ovde se azurira lokacija korisnika u bazi
     private fun sendLocationToServer(location: Location) {
         if (FirebaseAuth.getInstance().currentUser != null) {
             val userRef = FirebaseFirestore.getInstance()
@@ -113,11 +114,10 @@ class LocationService : Service() {
 
 
     private fun isNearbyAttraction(doc: DocumentSnapshot): Boolean {
-        // Fetch the attraction's latitude and longitude from the document
         val attractionLatitude = doc.getDouble("latitude") ?: return false
         val attractionLongitude = doc.getDouble("longitude") ?: return false
 
-        // Calculate the distance between the current location and the attraction
+        // racunanje distance izmedju korisnika i atrakcije
         val distance = calculateDistance(
             currentLocation.latitude,
             currentLocation.longitude,
@@ -127,7 +127,7 @@ class LocationService : Service() {
 
         Log.d("HELPER","Distance to attraction: $distance meters")
 
-        // Return true if the attraction is within the nearby threshold
+        // vraca true ukoliko je atrakcija unutar unesenog radijusa
         return distance <= NEARBY_THRESHOLD_METERS
     }
 
@@ -136,7 +136,7 @@ class LocationService : Service() {
         lat1: Double, lon1: Double,
         lat2: Double, lon2: Double
     ): Double {
-        val R = 6371e3 // Earth radius in meters
+        val R = 6371e3 // radijus zemlje
         val phi1 = Math.toRadians(lat1)
         val phi2 = Math.toRadians(lat2)
         val deltaPhi = Math.toRadians(lat2 - lat1)
@@ -147,7 +147,7 @@ class LocationService : Service() {
                 sin(deltaLambda / 2) * sin(deltaLambda / 2)
         val c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
-        return R * c // Distance in meters
+        return R * c // vraca distancu u metrima
     }
 
     private fun showNotification(doc: DocumentSnapshot) {
@@ -155,7 +155,7 @@ class LocationService : Service() {
         notificationIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
 
         val notificationId = doc.id.hashCode() // Generisanje jedinstvenog ID-a na osnovu ID-a dokumenta
-        val pendingIntent = PendingIntent.getActivity(this, notificationId, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
+        val pendingIntent = PendingIntent.getActivity(this, notificationId, notificationIntent, PendingIntent.FLAG_IMMUTABLE) //ulazim iz notifikacije u aplikaciju
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Attraction Nearby: ${doc.getString("name")}")

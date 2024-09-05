@@ -58,12 +58,11 @@ import com.google.android.gms.maps.model.LatLng
 
 @Composable
 fun AttractionDetailScreen(
-    attractionId: String,  // ID of the attraction
-    currentUserId: String,  // ID of the current user
-    attractionViewModel: AttractionViewModel = viewModel(), // ViewModel instance
+    attractionId: String,
+    currentUserId: String,
+    attractionViewModel: AttractionViewModel = viewModel(),
     onBackToMapScreen: (LatLng) -> Unit,
 ) {
-    // State variables to hold attraction details and user inputs
     var attraction by remember { mutableStateOf<Attraction?>(null) }
     var reviewText by remember { mutableStateOf("") }
     var rating by remember { mutableFloatStateOf(0f) }
@@ -72,7 +71,7 @@ fun AttractionDetailScreen(
     val fullNames by attractionViewModel.fullNames.collectAsState()
     val fullName = fullNames[attraction?.addedByUserId] ?: "Unknown"
 
-    // Load attraction details when the screen is composed
+    // ucitavanje detalja atrakcije
     LaunchedEffect(attractionId, attraction?.addedByUserId) {
         attractionViewModel.loadAttractionDetails(attractionId) { fetchedAttraction ->
             attraction = fetchedAttraction
@@ -81,7 +80,7 @@ fun AttractionDetailScreen(
         attraction?.addedByUserId?.let { attractionViewModel.fetchUserFullName(it) }
 
 
-        // Load the user's existing review, if any
+        // ucitavanje korisnikovog review-a
         attractionViewModel.loadUserReview(attractionId, currentUserId) { existingReview ->
             if (existingReview != null) {
                 reviewText = existingReview.comment
@@ -89,12 +88,12 @@ fun AttractionDetailScreen(
                 userReview = existingReview
             }
             else {
-                rating = 0f // Ensure rating starts at 0 if no review exists
+                rating = 0f
             }
         }
     }
 
-    // Composable layout
+
     Card(
         modifier = Modifier.padding(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
@@ -239,7 +238,7 @@ fun AttractionDetailScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Show existing review if it exists
+            // ako postoji review korisnika za atrakciju pokazace ga
             userReview?.let {
                 Text(
                     text = buildAnnotatedString {
@@ -297,7 +296,7 @@ fun AttractionDetailScreen(
                         )
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White,  // Choose a different color if you like
+                        containerColor = Color.White,
                         contentColor = Color(0xff395068)
                     ),
                 ) {
@@ -306,7 +305,8 @@ fun AttractionDetailScreen(
 
 
             } ?: run {
-                // If no existing review, show the review form
+                //ne postoji review -> dodaje se ovde
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
@@ -369,7 +369,7 @@ fun AttractionDetailScreen(
                             )
                         },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color.White,  // Choose a different color if you like
+                            containerColor = Color.White,
                             contentColor = Color(0xff395068)
                         ),
                     ) {

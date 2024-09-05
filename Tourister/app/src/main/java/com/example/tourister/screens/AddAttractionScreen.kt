@@ -56,6 +56,7 @@ fun AddAttractionScreen(
     latitude: Double,
     longitude: Double,
     currentUserId: String,
+    onAddAttraction: (Attraction) -> Unit,
     onBackToMapScreen: (LatLng) -> Unit,
     attractionViewModel: AttractionViewModel
 ) {
