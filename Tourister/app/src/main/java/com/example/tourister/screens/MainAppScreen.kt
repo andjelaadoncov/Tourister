@@ -1,19 +1,15 @@
 package com.example.tourister.screens
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -30,7 +26,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.tourister.R
 import com.example.tourister.viewModels.AttractionViewModel
 import com.example.tourister.viewModels.LocationViewModel
-import com.example.tourister.viewModels.ProfileViewModel
 import com.example.tourister.viewModels.UserListViewModel
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
@@ -41,15 +36,15 @@ import kotlinx.coroutines.launch
 @Composable
 fun MainAppScreen(
     locationViewModel: LocationViewModel = viewModel(),
-    attractionViewModel: AttractionViewModel = viewModel(), // Add AttractionViewModel
+    attractionViewModel: AttractionViewModel = viewModel(),
     userListViewModel: UserListViewModel = viewModel(),
     onLogout: () -> Unit
 ) {
-    val auth = FirebaseAuth.getInstance()
+    val auth = FirebaseAuth.getInstance() // koristim za pribavljivanje info o trenutno ulogovanom korisniku
     val currentUserId = auth.currentUser?.uid ?: ""
 
     val navController = rememberNavController()
-    val scope = rememberCoroutineScope()
+    val scope = rememberCoroutineScope() //zivotni ciklus, pokretanje asinhronih fja bez blokiranja niti
     var showLogoutDialog by remember { mutableStateOf(false) }
     val attractionLocations = remember { mutableStateListOf<LatLng>() }
 
@@ -93,10 +88,9 @@ fun MainAppScreen(
                     onAddAttraction = { latLng ->
                         navController.navigate("addAttraction/${latLng.latitude}/${latLng.longitude}")
                     },
-                    attractionViewModel = attractionViewModel, // Pass AttractionViewModel
+                    attractionViewModel = attractionViewModel,
                     onAttractionClick = { attraction ->
-                        // Navigate to the AttractionDetailScreen when a marker is clicked
-                        navController.navigate("attractionDetail/${attraction}")
+                        navController.navigate("attractionDetail/${attraction}") //ovde je navigacija da se ode na AttractionDetailScreen kad se klikne na neku atrakciju
                     }
                 )
             }
@@ -127,9 +121,8 @@ fun MainAppScreen(
                     longitude = longitude,
                     currentUserId = currentUserId,
                     onAddAttraction = { attraction ->
-                        // Save to Firebase or local database
                         scope.launch {
-                            // Add the attraction location to the list and navigate back to the map
+                            //pokrece se koruntina unutar scope-a koja dodaje lokaciju atrakcije u listu lokacija atrakcija i navigira nazad na mapu pomocu navCont
                             attractionLocations.add(LatLng(attraction.latitude, attraction.longitude))
                             navController.navigate("map")
                         }
@@ -169,7 +162,7 @@ fun MainAppScreen(
 
         }
 
-        // Logout confirmation dialog
+        //dijalog za logout ovde:
         if (showLogoutDialog) {
             AlertDialog(
                 onDismissRequest = { showLogoutDialog = false },
@@ -197,11 +190,11 @@ fun MainAppScreen(
 fun NavigationBar(navController: NavHostController) {
     NavigationBar(
         containerColor = Color(0xff395068),
-        modifier = Modifier.fillMaxWidth()  // Ovaj modifikator osigurava da NavigationBar popuni celu širinu
+        modifier = Modifier.fillMaxWidth()
     ){
         Row(
-            modifier = Modifier.fillMaxWidth(), // Osigurava da Row popuni celu širinu
-            horizontalArrangement = Arrangement.SpaceAround  // Ravnomerno rasporedi stavke
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround
         ) {
             NavigationBarItem(
                 selected = false,

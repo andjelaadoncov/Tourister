@@ -57,7 +57,6 @@ fun AddAttractionScreen(
     longitude: Double,
     currentUserId: String,
     onBackToMapScreen: (LatLng) -> Unit,
-    onAddAttraction: (Attraction) -> Unit,
     attractionViewModel: AttractionViewModel
 ) {
     val context = LocalContext.current
@@ -69,7 +68,7 @@ fun AddAttractionScreen(
     var workingHours by remember { mutableStateOf("") }
     var imageUrl by remember { mutableStateOf<String?>(null) }
 
-    // Predefined list of attraction types
+    // lista tipova atrakcija
     val attractionTypes = listOf(
         "Historical Sites",
         "Natural Attractions",
@@ -82,7 +81,7 @@ fun AddAttractionScreen(
 
     var expanded by remember { mutableStateOf(false) }
 
-    // Create a Uri for storing the captured image
+    // Uri za uslikanu sliku
     val photoFile = remember { File(context.cacheDir, "captured_image.jpg") }
     val capturedPhotoUri = remember {
         FileProvider.getUriForFile(
@@ -162,7 +161,7 @@ fun AddAttractionScreen(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Attraction Type Dropdown Menu
+
                 ExposedDropdownMenuBox(
                     expanded = expanded,
                     onExpandedChange = { expanded = !expanded }
@@ -219,7 +218,7 @@ fun AddAttractionScreen(
                 }
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Display the selected image
+                // prikaz odabrane slike
                 DisplayImage(imageUrl)
 
                 Button(onClick = {

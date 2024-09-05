@@ -103,7 +103,7 @@ fun ErrorMessage(message: String, onDismiss: () -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
-            .background(Color(0x99000000)) // Optional: semi-transparent background
+            .background(Color(0x99000000))
     ) {
         Card(
             colors = CardDefaults.cardColors(Color.White),

@@ -4,10 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Application
 import android.content.pm.PackageManager
-import android.location.Location
-import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
@@ -59,22 +55,6 @@ class LocationViewModel(application: Application) : AndroidViewModel(application
                 coarseLocationPermission == PackageManager.PERMISSION_GRANTED
     }
 
-    fun requestLocationPermissions(permissionLauncher: ActivityResultLauncher<Array<String>>) {
-        if (!checkLocationPermissions()) {
-            permissionLauncher.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                )
-            )
-        } else {
-            startLocationUpdates()
-        }
-    }
-
-    fun onPermissionsGranted() {
-        startLocationUpdates()
-    }
 
     override fun onCleared() {
         super.onCleared()

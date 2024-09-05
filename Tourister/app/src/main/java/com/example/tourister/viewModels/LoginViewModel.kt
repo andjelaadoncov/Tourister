@@ -20,7 +20,7 @@ class LoginViewModel : ViewModel() {
                 auth.signInWithEmailAndPassword(username, password).await()
                 onSuccess()
             } catch (e: Exception) {
-                onError(e) // Trigger error callback
+                onError(e)
             }
         }
     }

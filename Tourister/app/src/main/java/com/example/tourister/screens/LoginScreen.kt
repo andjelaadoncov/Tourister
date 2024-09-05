@@ -37,7 +37,6 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // Card for Welcome Message and Login Form
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -116,7 +115,7 @@ fun LoginScreen(
                     onClick = {
                         loginViewModel.loginUser(username, password,
                             onSuccess = onLoginSuccess,
-                            onError = onLoginError // Handle errors
+                            onError = onLoginError
                         )
                     },
                     colors = ButtonDefaults.buttonColors(

@@ -43,7 +43,6 @@ fun RegistrationScreen(
 
     val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         bitmap?.let {
-            // Convert the bitmap to a URI if needed, or save it directly
             registrationViewModel.onProfileBitmapChange(it)
         }
     }
@@ -60,7 +59,7 @@ fun RegistrationScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        // Card for Registration Form
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -169,7 +168,7 @@ fun RegistrationScreen(
 
                 Button(
                     onClick = {
-                        // Otvorite galeriju za izbor slike
+                        // otvara se galerija za izbor slike
                         pickImageLauncher.launch("image/*")
                     },
                     colors = ButtonDefaults.buttonColors(
@@ -200,7 +199,7 @@ fun RegistrationScreen(
                     onClick = {
                         registrationViewModel.registerUser(
                             onSuccess = { uri -> onRegisterSuccess(uri) },
-                            onError = onRegisterError // Handle errors
+                            onError = onRegisterError
                         )
                     },
                     colors = ButtonDefaults.buttonColors(

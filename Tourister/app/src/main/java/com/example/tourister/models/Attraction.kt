@@ -13,8 +13,8 @@ data class Attraction(
     val attractionType: String = "",
     val ticketPrice: String = "",
     val workingHours: String = "",
-    val addedByUserId: String = "",  // New field for the user who added the attraction
+    val addedByUserId: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val averageRating: Float = 0f,  // New field for average rating
-    val numberOfReviews: Int = 0    // New field for the number of reviews
+    val averageRating: Float = 0f,
+    val numberOfReviews: Int = 0
 )

@@ -34,7 +34,7 @@ fun AboutScreen() {
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp),
-        contentAlignment = Alignment.Center // Center content horizontally and vertically
+        contentAlignment = Alignment.Center
     ) {
         Card(
             modifier = Modifier
@@ -47,14 +47,14 @@ fun AboutScreen() {
         ) {
             Column(
                 modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally, // Center contents horizontally
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
                     text = "About Tourister",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xff395068), // Adjust color to fit your theme
+                    color = Color(0xff395068),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
@@ -87,7 +87,6 @@ fun AboutScreen() {
                         .padding(4.dp)
                 )
 
-                // Center the image
                 Box(
                     modifier = Modifier
                         .padding(top = 16.dp)
@@ -95,9 +94,9 @@ fun AboutScreen() {
                         .wrapContentSize(align = Alignment.Center)
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.attraction), // Replace with your drawable resource
+                        painter = painterResource(id = R.drawable.attraction),
                         contentDescription = "Tourister Logo",
-                        modifier = Modifier.size(200.dp) // Adjust size as needed
+                        modifier = Modifier.size(200.dp)
                     )
                 }
             }

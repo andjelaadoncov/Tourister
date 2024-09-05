@@ -89,14 +89,14 @@ class RegistrationViewModel : ViewModel() {
                 }
 
             } catch (e: Exception) {
-                onError(e) // Trigger error callback
+                onError(e)
             }
         }
     }
 
     private fun uploadBitmapAsImage(bitmap: Bitmap, userId: String): Uri? {
         return try {
-            // Save bitmap to a temporary file
+            // cuvanje bitmape u fajl
             val file = File.createTempFile("profile_image_$userId", ".jpg")
             val outputStream = FileOutputStream(file)
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream)

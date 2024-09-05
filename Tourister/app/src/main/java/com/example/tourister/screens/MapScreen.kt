@@ -42,26 +42,26 @@ fun MapScreen(
     onBackToMainScreen: () -> Unit,
     onAddAttraction: (LatLng) -> Unit,
     attractionViewModel: AttractionViewModel = viewModel(),
-    onAttractionClick: (String) -> Unit,  // Add this callback for navigation
+    onAttractionClick: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val mapView = rememberMapViewWithLifecycle()
     val googleMapState = remember { mutableStateOf<GoogleMap?>(null) }
     var showDialog by remember { mutableStateOf(false) }
-    var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
+//    var selectedLatLng by remember { mutableStateOf<LatLng?>(null) }
     val attractions by attractionViewModel.attractions.collectAsState()
     var selectedAttractionType by remember { mutableStateOf<String?>(null) }
-    var selectedRating by remember { mutableStateOf<Float?>(0f) }
+    var selectedRating by remember { mutableStateOf<Float?>(0f) } //default rating je 0
     var selectedDate by remember { mutableStateOf<Long?>(null) }
-    var selectedRadius by remember { mutableDoubleStateOf(10.0) } // Default radius is 10 km
-    var showDatePicker by remember { mutableStateOf(false) } // State to control DatePickerDialog
+    var selectedRadius by remember { mutableDoubleStateOf(10.0) } //default radius je 10km
+    var showDatePicker by remember { mutableStateOf(false) } //za upravljanje DatePickerDialog-om
 
     val location by locationViewModel.location.observeAsState()
 
     val calendar = Calendar.getInstance()
     val userLocation = location?.let { LatLng(it.latitude, it.longitude) }
 
-    // Side-effect to show DatePickerDialog when showDatePicker changes to true
+    //prikaz date picker-a
     if (showDatePicker) {
         android.app.DatePickerDialog(
             context,
@@ -77,7 +77,7 @@ fun MapScreen(
     }
 
     fun updateMarkers(googleMap: GoogleMap,  userLocation: LatLng?) {
-        googleMap.clear() // Clear existing markers
+        googleMap.clear() //obrisi postojece markere
 
         userLocation?.let {
             val locationMarkerOptions = MarkerOptions()
@@ -87,7 +87,7 @@ fun MapScreen(
             googleMap.addMarker(locationMarkerOptions)
         }
 
-        // Filter attractions based on selected filters and radius
+        // Logika za filtriranje po izabranim kriterijumima:
         val filteredAttractions = attractions.filter { attraction ->
             val attractionLocation = Location("").apply {
                 latitude = attraction.latitude
@@ -106,9 +106,6 @@ fun MapScreen(
 
             val distanceInMeters = userLocationObj.distanceTo(attractionLocation)
 
-            //Log.d("HELPER","Attraction: ${attraction.name}, Distance: $distanceInMeters, Radius: ${radiusInKm * 1000}")
-
-
             val isWithinRadius = distanceInMeters <= selectedRadius * 1000
 
             isWithinRadius &&
@@ -117,7 +114,7 @@ fun MapScreen(
                     (selectedDate == null || isSameDay(attraction.createdAt, selectedDate!!))
         }
 
-        // Add markers for filtered attractions
+        // postavljanje posle filtriranja
         filteredAttractions.forEach { attraction ->
             val latLng = LatLng(attraction.latitude, attraction.longitude)
             val markerOptions = MarkerOptions()
@@ -128,7 +125,7 @@ fun MapScreen(
             googleMap.addMarker(markerOptions)
         }
 
-        // Set up listeners for marker clicks
+        // listen-er za click na marker
         googleMap.setOnMarkerClickListener { marker ->
             val selectedAttraction = filteredAttractions.find {
                 it.latitude == marker.position.latitude && it.longitude == marker.position.longitude
@@ -139,7 +136,7 @@ fun MapScreen(
             true
         }
 
-        // Set up listeners for map clicks
+        // listen-er za click na mapu
         googleMap.setOnMapClickListener { latLng ->
             val existingAttraction = filteredAttractions.find {
                 it.latitude == latLng.latitude && it.longitude == latLng.longitude
@@ -159,7 +156,7 @@ fun MapScreen(
                 .position(latLng)
                 .title("Your Location")
 
-            it.clear() // Clear previous markers
+            it.clear() // brisem prethodne markere
             it.addMarker(markerOptions)
             it.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 15f))
         }
@@ -200,7 +197,7 @@ fun MapScreen(
                 var radiusExpanded by remember { mutableStateOf(false) }
 
                 Column{
-                    // Filter by Type
+                    // filtriranje po tipu atrakcije
                     Text(
                         text = "Filter by Type",
                         modifier = Modifier
@@ -251,7 +248,7 @@ fun MapScreen(
                         }
                     }
 
-                    // Filter by Rating
+                    // filtriranje po oceni atrakcije
                     Column(modifier = Modifier.background(Color(0xff395068))){
                         Text(
                             text = "Filter by Rating",
@@ -284,7 +281,7 @@ fun MapScreen(
                         )
                     }
 
-                    // Filter by Date
+                    // filtriranje po datumu kad je dodata na mapu
                     Text(
                         text = "Filter by Date",
                         modifier = Modifier
@@ -304,7 +301,7 @@ fun MapScreen(
                     )
                     }
 
-                    // Filter by Radius
+                    // filtriranje po radijusu
                     Column(modifier = Modifier.background(Color(0xff395068))){
                         Text(
                             text = "Filter by Radius",
@@ -368,7 +365,7 @@ fun MapScreen(
 
 
 
-            // Adding Zoom Buttons
+            //  zoom button-i
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -469,7 +466,7 @@ fun ServiceControl() {
             context.startForegroundService(serviceIntent)
             isServiceRunning = true
         },
-            enabled = !isServiceRunning // Dugme je onemogućeno kada je servis pokrenut
+            enabled = !isServiceRunning
         ) {
             Text("Start Service")
         }
@@ -479,6 +476,7 @@ fun ServiceControl() {
             context.stopService(serviceIntent)
             isServiceRunning = false
         },
+            enabled = isServiceRunning
         ) {
             Text("Stop Service")
         }
